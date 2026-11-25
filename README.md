@@ -89,6 +89,8 @@ Passwords are hashed with bcrypt. The session cookie is `httpOnly` and `SameSite
 
 The bank is `lib/questions/bank.ts`: 135 questions, each written in English, Simplified Chinese, and Traditional Chinese. Traditional wording follows written Chinese used in Hong Kong where the everyday word differs (薪金, 街市, 電郵, 農曆新年, 爺爺嫲嫲 / 公公婆婆), not a mechanical character swap of the Simplified line.
 
+On the question page the bank can be browsed three ways, in all three languages. By theme, questions are grouped and can sit in more than one category: childhood, family, school, career (the old “work” label), self-development, marriage, children, food, traditions, migration, later life, and the rest of the themes. By time, each question has a life stage and the groups run from family beginnings through childhood, school, coming of age, career, marriage, and children, then later life, with a last group for memories that run across a life. By place, only the questions about a place are shown, gathered as hometown, home, a city or region, moving, or travel. Nothing in that grouping is a private address. Suggested questions still sit above the groups.
+
 A few questions contain placeholders such as `{childhoodPlace}` or `{person}`. If that part of the profile is empty, the fallback sentence is used. `lib/questions/personalize.ts` hides a question whose main theme was opted out of, and lifts questions that match what they said they enjoy, their place in the family, and any detail that can be filled in.
 
 ### Speech to text

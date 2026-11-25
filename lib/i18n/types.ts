@@ -124,6 +124,8 @@ export type Dictionary = {
     school: string;
     comingOfAge: string;
     work: string;
+    selfDevelopment: string;
+    family: string;
     home: string;
     places: string;
     food: string;
@@ -180,6 +182,33 @@ export type Dictionary = {
     search: string;
     none: string;
     allThemes: string;
+    browseBy: string;
+    byTheme: string;
+    byTime: string;
+    byPlace: string;
+    browseThemes: string;
+    browseTime: string;
+    browsePlaces: string;
+    allStages: string;
+    allPlaces: string;
+    stages: {
+      origins: string;
+      childhood: string;
+      school: string;
+      comingOfAge: string;
+      career: string;
+      marriage: string;
+      children: string;
+      laterLife: string;
+      acrossLife: string;
+    };
+    places: {
+      hometown: string;
+      home: string;
+      city: string;
+      migration: string;
+      travel: string;
+    };
   };
   editor: {
     speak: string;

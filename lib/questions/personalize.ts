@@ -1,13 +1,14 @@
 import type { Locale } from "@/lib/locale";
 import { firstPiece, type Profile } from "@/lib/profile";
 import { QUESTIONS } from "@/lib/questions/bank";
-import type { Theme } from "@/lib/questions/types";
+import { questionCategories, questionLocations, questionStage } from "@/lib/questions/facets";
+import type { LifeStage, Location, Theme } from "@/lib/questions/types";
 
 const OPEN_TO_THEMES: Record<string, Theme[]> = {
   childhood: ["childhood", "coming-of-age"],
-  elders: ["parents", "grandparents", "siblings"],
+  elders: ["parents", "grandparents", "siblings", "family"],
   school: ["school"],
-  work: ["work"],
+  work: ["work", "self-development"],
   food: ["food"],
   places: ["places", "home", "migration"],
   traditions: ["traditions"],
@@ -15,7 +16,7 @@ const OPEN_TO_THEMES: Record<string, Theme[]> = {
   friendship: ["friendship"],
   objects: ["objects"],
   era: ["historical-era"],
-  hobbies: ["skills", "later-life"],
+  hobbies: ["skills", "later-life", "self-development"],
 };
 
 const SKIP_TO_THEMES: Record<string, Theme[]> = {
@@ -37,6 +38,10 @@ const ROLE_THEMES: Record<string, Theme[]> = {
 export type PersonalizedQuestion = {
   id: string;
   theme: Theme;
+  categories: Theme[];
+  stage: LifeStage;
+  locations: Location[];
+  order: number;
   text: string;
   score: number;
   hidden: boolean;
@@ -92,7 +97,8 @@ export function personalizeQuestions(profile: Profile, locale: Locale, answeredI
   const values = valuesFromProfile(profile);
   const answered = new Set(answeredIds);
 
-  const cards: PersonalizedQuestion[] = QUESTIONS.map((question) => {
+  const cards: PersonalizedQuestion[] = QUESTIONS.map((question, order) => {
+    const categories = questionCategories(question);
     const hidden = skip.has(question.theme);
     const localized =
       locale === "zh-Hans"
@@ -103,8 +109,8 @@ export function personalizeQuestions(profile: Profile, locale: Locale, answeredI
 
     let score = 0;
     if (open.has(question.theme)) score += 5;
-    for (const theme of question.also || []) {
-      if (open.has(theme)) score += 2;
+    for (const theme of categories) {
+      if (theme !== question.theme && open.has(theme)) score += 2;
     }
     if (roleThemes.has(question.theme)) score += 3;
     if (question.roles?.includes(profile.familyRole)) score += 4;
@@ -114,6 +120,10 @@ export function personalizeQuestions(profile: Profile, locale: Locale, answeredI
     return {
       id: question.id,
       theme: question.theme,
+      categories,
+      stage: questionStage(question),
+      locations: questionLocations(question),
+      order,
       text: localized.text,
       score,
       hidden,
