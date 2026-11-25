@@ -59,6 +59,12 @@ The sign-in page can enter either account for you. Their stories are not visible
 | `npm run check` | Confirms the question bank has 100+ items in all three languages |
 | `npm run gift-card:sample` | Rewrites the sample cards in `docs/samples/` |
 | `npm run lint` | ESLint |
+| `npm run android:url` | Prints the site address that would be baked into the Android APK |
+| `npm run android:debug` | Builds a sideloadable debug APK. See [docs/apk.md](docs/apk.md) |
+
+### Android app
+
+There is a thin Android WebView shell (Capacitor) so the family can sideload 家燈. It opens the hosted website. It does not run the server on the phone. The address is `CAPACITOR_SERVER_URL`, set when you build. Until the real site exists, that address is the placeholder `https://stories.example.com`. Install steps, permissions, and release signing are in [docs/apk.md](docs/apk.md).
 
 Sample gift cards, using the placeholder address `https://stories.example.com/sign-up`, are already in `docs/samples/`:
 
