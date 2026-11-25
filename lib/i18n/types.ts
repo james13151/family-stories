@@ -268,6 +268,18 @@ export type Dictionary = {
     photos: string;
     deleteTitle: string;
     deleteBody: string;
+    include: string;
+    makeSet: string;
+  };
+  piece: {
+    open: string;
+    lead: string;
+    setTitle: string;
+    setLead: string;
+    setSubtitle: string;
+    contents: string;
+    empty: string;
+    print: string;
   };
   preview: {
     kicker: string;

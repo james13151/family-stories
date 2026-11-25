@@ -20,7 +20,7 @@ export function StoryActions({ dict, storyId }: { dict: Dictionary; storyId: str
   return (
     <div className="no-print mb-4 flex flex-wrap gap-2">
       <Link href={`/stories/${storyId}/edit`} className="inline-flex h-12 items-center rounded-xl bg-[#8d3b2e] px-5 text-[#fffaf3]">{dict.common.edit}</Link>
-      <Button type="button" variant="outline" className="h-12 px-5" onClick={() => window.print()}>{dict.preview.print}</Button>
+      <Link href={`/stories/${storyId}/booklet`} className="inline-flex h-12 items-center rounded-xl border border-[#e0d3bf] bg-white px-5">{dict.piece.open}</Link>
       <Button type="button" variant="ghost" className="h-12 px-5 text-[#8d3b2e]" onClick={() => setOpen(true)}>{dict.common.delete}</Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

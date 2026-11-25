@@ -292,6 +292,18 @@ export const zhHant: Dictionary = {
     photos: "照片",
     deleteTitle: "刪除這個故事？",
     deleteBody: "文字、照片和錄音都會從這個帳戶裡刪掉。",
+    include: "放進小冊子",
+    makeSet: "把這 {count} 則做成小冊子",
+  },
+  piece: {
+    open: "列印這一冊",
+    lead: "這一則單獨成冊，可以列印或存成 PDF，隨時給人看。帶目錄和章節的回憶錄是另外一本。",
+    setTitle: "幾則故事",
+    setLead: "只把你挑出的幾則訂成一小冊。可以列印或存成 PDF。完整的回憶錄仍是另外一本。",
+    setSubtitle: "從家裡的故事裡挑出來的",
+    contents: "這一冊裡",
+    empty: "請先在故事裡勾選至少一則。",
+    print: "列印或存成 PDF",
   },
   preview: {
     kicker: "回憶錄裡的一頁",
@@ -326,7 +338,7 @@ export const zhHant: Dictionary = {
   },
   child: {
     title: "給孩子的記憶",
-    lead: "可以回答一道關於他們的題目，也可以從空白頁寫起。這些記憶和你的其他故事放在一起，也能印進家裡的小書。",
+    lead: "可以回答一道關於他們的題目，也可以從空白頁寫起。一則記憶可以單獨印成小冊子，也可以收進整本回憶錄。",
     name: "孩子的名字",
     namePh: "例如：樂",
     blank: "從空白頁寫起",

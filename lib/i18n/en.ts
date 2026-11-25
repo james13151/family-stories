@@ -292,6 +292,18 @@ export const en: Dictionary = {
     photos: "Photos",
     deleteTitle: "Remove this story?",
     deleteBody: "The words, the photographs, and the recording will be deleted from this account.",
+    include: "Include in a booklet",
+    makeSet: "Booklet of these {count}",
+  },
+  piece: {
+    open: "Print this booklet",
+    lead: "A booklet of this one story, to print or save as a PDF and pass on by itself. The memoir, with every chapter, is separate.",
+    setTitle: "A few stories",
+    setLead: "A small booklet of only the stories you chose. Print it or save a PDF. The full memoir stays separate.",
+    setSubtitle: "Chosen from the family stories",
+    contents: "In this booklet",
+    empty: "Choose at least one story from the log.",
+    print: "Print or save as PDF",
   },
   preview: {
     kicker: "A page from the memoir",
@@ -326,7 +338,7 @@ export const en: Dictionary = {
   },
   child: {
     title: "Memories for a child",
-    lead: "Answer a prompt about their life, or begin a blank page. These memories stay with your other stories and can be printed in the family booklet.",
+    lead: "Answer a prompt about their life, or begin a blank page. Print one memory as its own booklet, or keep it in the memoir with everything else.",
     name: "Child's name",
     namePh: "For example: Lok",
     blank: "Start a blank page",

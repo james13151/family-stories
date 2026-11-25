@@ -292,6 +292,18 @@ export const zhHans: Dictionary = {
     photos: "照片",
     deleteTitle: "删除这个故事？",
     deleteBody: "文字、照片和录音都会从这个账号里删掉。",
+    include: "放进小册子",
+    makeSet: "把这 {count} 则做成小册子",
+  },
+  piece: {
+    open: "打印这一册",
+    lead: "这一则单独成册，可以打印或存成 PDF，随时给人看。带目录和章节的回忆录是另外一本。",
+    setTitle: "几则故事",
+    setLead: "只把你挑出的几则订成一小册。可以打印或存成 PDF。完整的回忆录仍是另外一本。",
+    setSubtitle: "从家里的故事里挑出来的",
+    contents: "这一册里",
+    empty: "请先在故事里勾选至少一则。",
+    print: "打印或存成 PDF",
   },
   preview: {
     kicker: "回忆录里的一页",
@@ -326,7 +338,7 @@ export const zhHans: Dictionary = {
   },
   child: {
     title: "给孩子的记忆",
-    lead: "可以回答一道关于他们的题目，也可以从空白页写起。这些记忆和你的其他故事放在一起，也能印进家里的小书。",
+    lead: "可以回答一道关于他们的题目，也可以从空白页写起。一则记忆可以单独印成小册子，也可以收进整本回忆录。",
     name: "孩子的名字",
     namePh: "例如：晓",
     blank: "从空白页写起",
