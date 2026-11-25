@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { Dictionary } from "@/lib/i18n/types";
 import { fillTemplate } from "@/lib/locale";
-import { childThemeLabel, memoryPlaceLabel, memoryStageLabel } from "@/lib/memory-labels";
+import { childThemeLabel, memoryStageLabel } from "@/lib/memory-labels";
 import { stageRank } from "@/lib/memories";
 import { sanitizeStoryHtml } from "@/lib/sanitize";
 import { THEMES } from "@/lib/questions/types";
@@ -27,28 +27,73 @@ export type BookletStory = {
   photos: { id: string; caption: string }[];
 };
 
+type Chapter = {
+  id: string;
+  title: string;
+  stories: (BookletStory & { number: number })[];
+};
+
+const themeRank = new Map<string, number>([...THEMES, ...CHILD_THEMES].map((theme, index) => [theme, index]));
+
+function personKey(story: BookletStory) {
+  if (story.kind !== "child") return "self";
+  return `child:${story.childName || "_"}`;
+}
+
 export function Booklet({
   dict,
   author,
+  compiled,
   stories,
 }: {
   dict: Dictionary;
   author: string;
+  compiled: string;
   stories: BookletStory[];
 }) {
-  const [order, setOrder] = useState<"time" | "stage" | "theme">("time");
-  const ordered = useMemo(() => {
+  const [order, setOrder] = useState<"stage" | "theme" | "person">("stage");
+
+  const chapters = useMemo(() => {
     const copy = [...stories];
-    if (order === "stage") {
-      copy.sort((a, b) => stageRank(a.stage) - stageRank(b.stage) || a.createdAt.localeCompare(b.createdAt));
-    } else if (order === "theme") {
-      const rank = new Map<string, number>([...THEMES, ...CHILD_THEMES].map((theme, index) => [theme, index]));
-      copy.sort((a, b) => (rank.get(a.theme) ?? 99) - (rank.get(b.theme) ?? 99) || a.createdAt.localeCompare(b.createdAt));
-    } else {
-      copy.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    copy.sort((a, b) => {
+      if (order === "theme") {
+        return (themeRank.get(a.theme) ?? 99) - (themeRank.get(b.theme) ?? 99) || stageRank(a.stage) - stageRank(b.stage) || a.createdAt.localeCompare(b.createdAt);
+      }
+      if (order === "person") {
+        const person = personKey(a).localeCompare(personKey(b));
+        if (personKey(a) === "self" && personKey(b) !== "self") return -1;
+        if (personKey(b) === "self" && personKey(a) !== "self") return 1;
+        return person || stageRank(a.stage) - stageRank(b.stage) || a.createdAt.localeCompare(b.createdAt);
+      }
+      return stageRank(a.stage) - stageRank(b.stage) || a.createdAt.localeCompare(b.createdAt);
+    });
+
+    const groups: Chapter[] = [];
+    let number = 0;
+    for (const story of copy) {
+      const id = order === "theme" ? story.theme || "other" : order === "person" ? personKey(story) : story.stage || "across-life";
+      const title =
+        order === "theme"
+          ? story.theme
+            ? childThemeLabel(dict, story.theme)
+            : dict.booklet.other
+          : order === "person"
+            ? story.kind === "child"
+              ? story.childName
+                ? fillTemplate(dict.booklet.forChild, { name: story.childName })
+                : dict.booklet.forAChild
+              : fillTemplate(dict.booklet.ownLife, { name: author })
+            : memoryStageLabel(dict, story.stage || "across-life");
+      let chapter = groups.find((item) => item.id === id);
+      if (!chapter) {
+        chapter = { id, title, stories: [] };
+        groups.push(chapter);
+      }
+      number += 1;
+      chapter.stories.push({ ...story, number });
     }
-    return copy;
-  }, [order, stories]);
+    return groups;
+  }, [author, dict, order, stories]);
 
   if (!stories.length) {
     return (
@@ -63,9 +108,9 @@ export function Booklet({
     <div className="booklet">
       <div className="no-print mb-6 flex flex-wrap items-center gap-2">
         {([
-          ["time", dict.booklet.byTime],
           ["stage", dict.booklet.byStage],
           ["theme", dict.booklet.byTheme],
+          ["person", dict.booklet.byPerson],
         ] as const).map(([id, label]) => (
           <button key={id} type="button" className={cn("min-h-12 rounded-full border px-4 text-base", order === id ? "border-[#8d3b2e] bg-[#8d3b2e] text-[#fffaf3]" : "border-[#e0d3bf] bg-[#fffaf3]")} aria-pressed={order === id} onClick={() => setOrder(id)}>
             {label}
@@ -74,62 +119,79 @@ export function Booklet({
         <Button type="button" variant="outline" className="h-12 px-5" onClick={() => window.print()}>{dict.booklet.print}</Button>
       </div>
 
-      <header className="booklet-leaf booklet-cover book-sheet px-8 py-16 text-center">
-        <p className="text-sm tracking-[0.2em] text-[#8d3b2e]">{dict.booklet.coverKicker}</p>
-        <h2 className="mt-4 text-4xl">{dict.booklet.coverTitle}</h2>
-        <p className="mt-4 text-lg text-[#4d4032]">{fillTemplate(dict.booklet.coverBy, { name: author })}</p>
+      <header className="booklet-leaf booklet-cover book-sheet flex min-h-[70vh] flex-col items-center justify-center px-8 py-16 text-center">
+        <p className="text-sm tracking-[0.28em] text-[#8d3b2e]">{dict.booklet.coverKicker}</p>
+        <h2 className="mt-6 text-5xl leading-tight">{dict.booklet.coverTitle}</h2>
+        <p className="mt-4 text-xl text-[#4d4032]">{dict.booklet.coverSubtitle}</p>
+        <div className="my-8 h-px w-16 bg-[#a6844a]" />
+        <p className="text-lg">{fillTemplate(dict.booklet.coverBy, { name: author })}</p>
+        <p className="mt-2 text-[#6d5e4c]">{compiled}</p>
       </header>
 
-      <nav className="booklet-leaf booklet-toc book-sheet mt-6 p-6 sm:p-8" aria-label={dict.booklet.contents}>
+      <nav className="booklet-leaf booklet-toc book-sheet mt-6 p-6 sm:p-10" aria-label={dict.booklet.contents}>
         <h2 className="text-3xl">{dict.booklet.contents}</h2>
-        <ol className="mt-4 space-y-2">
-          {ordered.map((story, index) => (
-            <li key={story.id}>
-              <a href={`#story-${story.id}`} className="flex gap-3 text-lg">
-                <span className="w-8 text-[#8d3b2e]">{index + 1}</span>
-                <span>
-                  {story.title || story.question}
-                  <span className="mt-0.5 block text-sm text-[#6d5e4c]">
-                    {story.when}
-                    {story.childName ? ` · ${fillTemplate(dict.booklet.forChild, { name: story.childName })}` : ""}
-                  </span>
-                </span>
+        <ol className="mt-6 space-y-6">
+          {chapters.map((chapter, index) => (
+            <li key={chapter.id}>
+              <a href={`#chapter-${chapter.id}`} className="text-xl">
+                <span className="text-[#8d3b2e]">{fillTemplate(dict.booklet.chapter, { number: index + 1 })}</span>
+                <span className="mx-2 text-[#a6844a]">·</span>
+                {chapter.title}
               </a>
+              <ol className="mt-2 space-y-1 pl-1">
+                {chapter.stories.map((story) => (
+                  <li key={story.id}>
+                    <a href={`#story-${story.id}`} className="flex gap-3 text-lg">
+                      <span className="w-8 shrink-0 text-[#6d5e4c]">{story.number}</span>
+                      <span>
+                        {story.title || story.question}
+                        <span className="mt-0.5 block text-sm text-[#6d5e4c]">{story.when}</span>
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
             </li>
           ))}
         </ol>
       </nav>
 
-      {ordered.map((story, index) => {
-        const clean = sanitizeStoryHtml(story.bodyHtml);
-        return (
-          <article key={story.id} id={`story-${story.id}`} className="booklet-leaf book-sheet mt-6 p-6 sm:p-10">
-            <p className="text-sm text-[#8d3b2e]">{index + 1}</p>
-            <h3 className="mt-2 text-3xl leading-tight">{story.title || story.question}</h3>
-            <p className="mt-2 text-[#6d5e4c]">
-              {story.when}
-              {story.childName ? ` · ${fillTemplate(dict.booklet.forChild, { name: story.childName })}` : ""}
-              {" · "}
-              {memoryStageLabel(dict, story.stage)}
-              {story.theme ? ` · ${childThemeLabel(dict, story.theme)}` : ""}
-              {story.places[0] ? ` · ${memoryPlaceLabel(dict, story.places[0])}` : ""}
-            </p>
-            {story.question && story.question !== story.title ? <p className="mt-4 text-lg text-[#4d4032]">{story.question}</p> : null}
-            {clean ? <div className="book-page book-size-md book-relaxed mt-5" dangerouslySetInnerHTML={{ __html: clean }} /> : null}
-            {story.photos.length ? (
-              <div className="mt-6 space-y-4">
-                {story.photos.map((photo) => (
-                  <figure key={photo.id} className="booklet-photo">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={`/api/media/photo/${photo.id}`} alt={photo.caption || ""} />
-                    {photo.caption ? <figcaption>{photo.caption}</figcaption> : null}
-                  </figure>
-                ))}
-              </div>
-            ) : null}
-          </article>
-        );
-      })}
+      {chapters.map((chapter, index) => (
+        <section key={chapter.id}>
+          <header id={`chapter-${chapter.id}`} className="booklet-leaf booklet-chapter book-sheet mt-6 flex min-h-[70vh] flex-col items-center justify-center px-8 py-16 text-center">
+            <p className="text-sm tracking-[0.22em] text-[#8d3b2e]">{fillTemplate(dict.booklet.chapter, { number: index + 1 })}</p>
+            <div className="my-6 h-px w-16 bg-[#a6844a]" />
+            <h2 className="text-4xl leading-tight">{chapter.title}</h2>
+            <p className="mt-4 text-[#6d5e4c]">{fillTemplate(dict.booklet.pieces, { count: chapter.stories.length })}</p>
+          </header>
+          {chapter.stories.map((story) => {
+            const clean = sanitizeStoryHtml(story.bodyHtml);
+            return (
+              <article key={story.id} id={`story-${story.id}`} className="booklet-leaf booklet-story book-sheet mt-6 p-6 sm:p-10">
+                <p className="text-sm tracking-wide text-[#8d3b2e]">{story.number}</p>
+                <h3 className="mt-2 text-3xl leading-tight">{story.title || story.question}</h3>
+                <p className="memoir-kicker mt-2 text-[#6d5e4c]">
+                  {story.when}
+                  {story.kind === "child" ? ` · ${story.childName ? fillTemplate(dict.booklet.forChild, { name: story.childName }) : dict.booklet.forAChild}` : ""}
+                </p>
+                {story.question && story.question !== story.title ? <p className="mt-4 text-lg text-[#4d4032]">{story.question}</p> : null}
+                {clean ? <div className="book-page book-size-md book-relaxed mt-5" dangerouslySetInnerHTML={{ __html: clean }} /> : null}
+                {story.photos.length ? (
+                  <div className="mt-6 space-y-5">
+                    {story.photos.map((photo) => (
+                      <figure key={photo.id} className="booklet-photo">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={`/api/media/photo/${photo.id}`} alt={photo.caption || ""} />
+                        {photo.caption ? <figcaption>{photo.caption}</figcaption> : null}
+                      </figure>
+                    ))}
+                  </div>
+                ) : null}
+              </article>
+            );
+          })}
+        </section>
+      ))}
     </div>
   );
 }

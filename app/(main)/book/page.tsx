@@ -30,6 +30,7 @@ export default async function BookPage() {
         <Booklet
           dict={dict}
           author={user.name}
+          compiled={formatWhen(new Date(), locale)}
           stories={stories.map((story) => {
             const memory = storyMemory(story);
             return {
