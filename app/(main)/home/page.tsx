@@ -38,6 +38,12 @@ export default async function HomePage() {
           <Link href="/questions" className="inline-flex h-14 items-center rounded-2xl bg-[#8d3b2e] px-6 text-lg text-[#fffaf3]">
             {due ? dict.home.choose : dict.home.writeAnyway}
           </Link>
+          <Link href="/children" className="inline-flex h-14 items-center rounded-2xl border border-[#e0d3bf] bg-white px-6 text-lg">
+            {dict.child.title}
+          </Link>
+          <Link href="/book" className="inline-flex h-14 items-center rounded-2xl border border-[#e0d3bf] bg-white px-6 text-lg">
+            {dict.booklet.open}
+          </Link>
         </div>
       </section>
       <section className="mt-10">

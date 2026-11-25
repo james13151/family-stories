@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { StoryActions } from "@/components/story-actions";
 import { StoryBook } from "@/components/story-book";
@@ -24,6 +25,10 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
       <h1 className="mt-2 text-4xl leading-tight">{story.title || story.questionText}</h1>
       <p className="mt-2 text-[#6d5e4c]">
         {fillTemplate(dict.preview.by, { name: user.name })} · {formatWhen(story.createdAt, locale)}
+        {story.childName ? ` · ${fillTemplate(dict.child.forChild, { name: story.childName })}` : ""}
+      </p>
+      <p className="no-print mt-2">
+        <Link href="/book" className="text-[#8d3b2e] underline decoration-[#a6844a] underline-offset-4">{dict.booklet.open}</Link>
       </p>
       <div className="mt-5">
         <StoryActions dict={dict} storyId={story.id} />

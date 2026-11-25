@@ -4,6 +4,8 @@ export type Dictionary = {
     home: string;
     questions: string;
     stories: string;
+    child: string;
+    book: string;
     settings: string;
     gift: string;
     signOut: string;
@@ -297,6 +299,67 @@ export type Dictionary = {
     urlLabel: string;
     placeholder: string;
     printHint: string;
+  };
+  child: {
+    title: string;
+    lead: string;
+    name: string;
+    namePh: string;
+    blank: string;
+    blankHelp: string;
+    nameNeeded: string;
+    prompts: string;
+    promptsLead: string;
+    saved: string;
+    savedEmpty: string;
+    forChild: string;
+    freeKicker: string;
+    byTheme: string;
+    byTime: string;
+    byPlace: string;
+    allThemes: string;
+    allStages: string;
+    allPlaces: string;
+    themes: {
+      arrival: string;
+      firsts: string;
+      birthdays: string;
+      everyday: string;
+      school: string;
+      outings: string;
+      character: string;
+      family: string;
+    };
+    stages: {
+      waiting: string;
+      newborn: string;
+      firstYear: string;
+      toddler: string;
+      schoolYears: string;
+      growing: string;
+    };
+    places: {
+      home: string;
+      hometown: string;
+      city: string;
+      travel: string;
+    };
+  };
+  booklet: {
+    title: string;
+    lead: string;
+    print: string;
+    byTime: string;
+    byStage: string;
+    byTheme: string;
+    contents: string;
+    coverKicker: string;
+    coverTitle: string;
+    coverBy: string;
+    empty: string;
+    forChild: string;
+    open: string;
+    writeFirst: string;
   };
   errors: { notFound: string; generic: string };
 };

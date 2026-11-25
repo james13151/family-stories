@@ -199,15 +199,49 @@
   pointer-events: none;
 }
 
+.booklet-photo img {
+  width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  background: #f7f1e7;
+}
+
+.booklet-photo figcaption {
+  padding: 0.75rem 0.25rem 0;
+  text-align: center;
+}
+
 @media print {
+  @page {
+    size: A5;
+    margin: 12mm;
+  }
   body {
     background: white !important;
   }
   .no-print {
     display: none !important;
   }
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
   .book-sheet {
     box-shadow: none;
-    break-after: page;
+    border-color: transparent;
+    background: white;
+  }
+  .booklet-leaf {
+    break-before: page;
+  }
+  .booklet-cover {
+    break-before: auto;
+  }
+  .booklet-photo {
+    break-inside: avoid;
+    margin-top: 8mm;
+  }
+  .booklet-photo img {
+    max-height: 85mm;
   }
 }

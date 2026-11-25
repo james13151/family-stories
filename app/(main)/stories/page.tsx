@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { StoryList } from "@/components/story-list";
 import { getCurrentUser } from "@/lib/auth";
@@ -23,6 +24,10 @@ export default async function StoriesPage() {
     <div>
       <h1 className="text-4xl">{dict.stories.title}</h1>
       <p className="mt-2 text-lg text-[#4d4032]">{dict.stories.lead}</p>
+      <p className="mt-3 flex flex-wrap gap-4">
+        <Link href="/book" className="text-[#8d3b2e] underline decoration-[#a6844a] underline-offset-4">{dict.booklet.open}</Link>
+        <Link href="/children" className="text-[#8d3b2e] underline decoration-[#a6844a] underline-offset-4">{dict.child.title}</Link>
+      </p>
       <div className="mt-6">
         <StoryList
           dict={dict}
@@ -32,6 +37,7 @@ export default async function StoriesPage() {
             question: story.questionText,
             excerpt: excerpt(story.bodyHtml),
             when: formatWhen(story.createdAt, locale),
+            childName: story.childName,
             hasAudio: Boolean(story.audio),
             photoCount: story.photos.length,
             photoId: story.photos[0]?.id || null,

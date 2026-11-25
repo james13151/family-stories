@@ -16,6 +16,7 @@ export function StoryList({
     question: string;
     excerpt: string;
     when: string;
+    childName: string;
     hasAudio: boolean;
     photoCount: number;
     photoId: string | null;
@@ -51,7 +52,10 @@ export function StoryList({
               <div className="size-20 shrink-0 rounded-lg bg-[#efe4d2]" />
             )}
             <div className="min-w-0">
-              <p className="text-sm text-[#6d5e4c]">{story.when}</p>
+              <p className="text-sm text-[#6d5e4c]">
+                {story.when}
+                {story.childName ? ` · ${story.childName}` : ""}
+              </p>
               <h2 className="truncate text-xl">{story.title || story.question}</h2>
               <p className="line-clamp-2 text-[#4d4032]">{story.excerpt || story.question}</p>
               <p className="mt-1 text-sm text-[#6d5e4c]">

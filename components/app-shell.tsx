@@ -21,7 +21,9 @@ export function AppShell({
   const links = [
     { href: "/home", label: dict.nav.home },
     { href: "/questions", label: dict.nav.questions },
+    { href: "/children", label: dict.nav.child },
     { href: "/stories", label: dict.nav.stories },
+    { href: "/book", label: dict.nav.book },
     { href: "/settings", label: dict.nav.settings },
   ];
 
@@ -49,9 +51,9 @@ export function AppShell({
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-3xl px-4 py-6 pb-36 md:py-10 md:pb-10">{children}</main>
+      <main className="mx-auto w-full max-w-3xl px-4 py-6 pb-44 md:py-10 md:pb-10">{children}</main>
       {showNav ? (
-        <nav className="no-print fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-[#e0d3bf] bg-[#fffaf3] md:hidden">
+        <nav className="no-print fixed inset-x-0 bottom-0 z-30 grid grid-cols-3 border-t border-[#e0d3bf] bg-[#fffaf3] md:hidden">
           {links.map((link) => (
             <Link key={link.href} href={link.href} className="min-h-14 px-1 py-2 text-center text-sm leading-tight">
               {link.label}

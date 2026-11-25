@@ -10,6 +10,8 @@ export function serializeStory(
     title: story.title,
     questionId: story.questionId,
     questionText: story.questionText,
+    kind: story.kind,
+    childName: story.childName,
     bodyHtml: story.bodyHtml,
     format: parseFormat(story.formatJson, locale),
     createdAt: story.createdAt.toISOString(),

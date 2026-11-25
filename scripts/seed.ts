@@ -183,6 +183,11 @@ async function main() {
         questionId: "cd-afternoon",
         questionText: "和孩子度过的哪一个平常下午，你愿意再过一次？",
         title: "教晓骑车",
+        kind: "child",
+        childName: "林晓",
+        theme: "everyday",
+        stage: "growing",
+        place: "city",
         bodyHtml: html([
           "晓第一次骑车，在宿舍后面的空地。我扶着后座，她喊爸爸你别松手，我说明明还扶着。",
           "其实我松过一次。她骑出去两三米，车子歪了，人没倒，回头看我，又气又笑。",

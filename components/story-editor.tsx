@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { encodeWavPcm16, mixAndDownsample } from "@/lib/audio/wav";
 import { formatClass, firstLetterIsLatin, type StoryFormat } from "@/lib/format";
 import type { Dictionary } from "@/lib/i18n/types";
+import { fillTemplate } from "@/lib/locale";
 import { storyToPlain } from "@/lib/sanitize";
 import type { StoryPayload } from "@/lib/stories";
 import { cn } from "cn";
@@ -231,6 +232,7 @@ export function StoryEditor({ dict, story }: { dict: Dictionary; story: StoryPay
           {dict.editor.preview}
         </Link>
       </div>
+      {story.childName ? <p className="text-sm text-[#6d5e4c]">{fillTemplate(dict.child.forChild, { name: story.childName })}</p> : null}
       <p className="text-lg text-[#8d3b2e]">{story.questionText}</p>
       <label className="mt-4 block text-sm text-[#6d5e4c]">
         {dict.editor.titleLabel}

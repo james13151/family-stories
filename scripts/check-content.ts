@@ -1,4 +1,6 @@
 import { QUESTIONS } from "../lib/questions/bank";
+import { CHILD_QUESTIONS } from "../lib/questions/child-bank";
+import { CHILD_PLACES, CHILD_STAGES, CHILD_THEMES } from "../lib/questions/child";
 import { FACETS, questionCategories } from "../lib/questions/facets";
 import { LIFE_STAGES, LOCATIONS, THEMES, type LifeStage, type Location } from "../lib/questions/types";
 
@@ -70,6 +72,44 @@ if (countTheme("marriage") < 5) errors.push("marriage category is thin");
 if (countTheme("children") < 8) errors.push("children category is thin");
 if (countTheme("family") < 8) errors.push("family category is thin");
 if (withPlace < 20) errors.push(`only ${withPlace} questions have a place`);
+
+if (CHILD_QUESTIONS.length < 18) errors.push(`child bank has ${CHILD_QUESTIONS.length}`);
+const childIds = new Set<string>();
+const childStages = new Set<string>();
+const childPlaces = new Set<string>();
+let childMulti = 0;
+for (const question of CHILD_QUESTIONS) {
+  if (ids.has(question.id) || childIds.has(question.id)) errors.push(`duplicate child id ${question.id}`);
+  childIds.add(question.id);
+  if (!question.id.startsWith("kid-")) errors.push(`child id should start with kid- ${question.id}`);
+  if (question.hans === question.hant) errors.push(`child hans and hant match ${question.id}`);
+  if (!CHILD_THEMES.includes(question.theme)) errors.push(`bad child theme ${question.id}`);
+  if (!CHILD_STAGES.includes(question.stage)) errors.push(`bad child stage ${question.id}`);
+  childStages.add(question.stage);
+  for (const place of question.places ?? []) {
+    if (!CHILD_PLACES.includes(place)) errors.push(`bad child place ${question.id}`);
+    childPlaces.add(place);
+  }
+  for (const theme of question.also ?? []) {
+    if (!CHILD_THEMES.includes(theme) || theme === question.theme) errors.push(`bad child also ${question.id}`);
+  }
+  if ((question.also?.length ?? 0) > 0) childMulti += 1;
+  const pairs: [string, string | undefined][] = [
+    [question.en, question.enFallback],
+    [question.hans, question.hansFallback],
+    [question.hant, question.hantFallback],
+  ];
+  for (const [text, fallback] of pairs) {
+    if (text.includes("{") && (!fallback || fallback.includes("{"))) errors.push(`child missing fallback ${question.id}`);
+  }
+}
+for (const stage of CHILD_STAGES) {
+  if (!childStages.has(stage)) errors.push(`unused child stage ${stage}`);
+}
+for (const place of CHILD_PLACES) {
+  if (!childPlaces.has(place)) errors.push(`unused child place ${place}`);
+}
+if (childMulti < 4) errors.push("child questions should belong to more than one theme");
 
 if (errors.length) {
   console.error(errors.join("\n"));

@@ -40,6 +40,11 @@ model Story {
   title        String   @default("")
   bodyHtml     String   @default("")
   formatJson   String   @default("{}")
+  kind         String   @default("life")
+  childName    String   @default("")
+  theme        String   @default("")
+  stage        String   @default("")
+  place        String   @default("")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   audio        Audio?
