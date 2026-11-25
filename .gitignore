@@ -40,6 +40,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Android release keys. The debug APK uses the local debug keystore.
+*.jks
+*.keystore
+android/keystore.properties
+
 # runtime data
 /data/*.db
 /data/*.db-journal
