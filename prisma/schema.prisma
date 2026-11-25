@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  passwordHash       String
+  name               String
+  locale             String    @default("en")
+  frequency          String    @default("weekly")
+  customIntervalDays Int       @default(14)
+  cycleIndex         Int       @default(0)
+  nextPromptAt       DateTime?
+  onboarded          Boolean   @default(false)
+  familyRole         String    @default("")
+  childhoodPlace     String    @default("")
+  placesLived        String    @default("")
+  occupation         String    @default("")
+  importantPeople    String    @default("")
+  hobbies            String    @default("")
+  openTopics         String    @default("[]")
+  skipTopics         String    @default("[]")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  stories            Story[]
+}
+
+model Story {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId   String?
+  questionText String
+  title        String   @default("")
+  bodyHtml     String   @default("")
+  formatJson   String   @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  audio        Audio?
+  photos       Photo[]
+
+  @@index([userId, updatedAt])
+}
+
+model Audio {
+  id          String   @id @default(cuid())
+  storyId     String   @unique
+  story       Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  storageKey  String
+  mimeType    String
+  bytes       Int
+  durationSec Float?
+  transcript  String   @default("")
+  sttProvider String   @default("")
+  createdAt   DateTime @default(now())
+}
+
+model Photo {
+  id         String   @id @default(cuid())
+  storyId    String
+  story      Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  storageKey String
+  mimeType   String
+  bytes      Int
+  caption    String   @default("")
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([storyId, sortOrder])
+}
