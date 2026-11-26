@@ -3,6 +3,25 @@ import { trimByCode, type PrintTrimCode } from "@/lib/print/catalog";
 import { CHILD_THEMES } from "@/lib/questions/child";
 import { THEMES } from "@/lib/questions/types";
 
+export const BOOK_KINDS = ["life", "child"] as const;
+export type BookKind = (typeof BOOK_KINDS)[number];
+
+export function isBookKind(value: string | null | undefined): value is BookKind {
+  return value === "life" || value === "child";
+}
+
+export function bookFromRequest(request: Request): BookKind {
+  return new URL(request.url).searchParams.get("book") === "child" ? "child" : "life";
+}
+
+export function bookFileStem(book: BookKind) {
+  return book === "child" ? "hearthlight-children" : "hearthlight-memoir";
+}
+
+export function storiesForBook<T extends { kind: string }>(stories: T[], book: BookKind) {
+  return stories.filter((story) => story.kind === book);
+}
+
 export const MEMOIR_GROUPINGS = ["stage", "theme", "person"] as const;
 export type MemoirGrouping = (typeof MEMOIR_GROUPINGS)[number];
 

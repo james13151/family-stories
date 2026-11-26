@@ -8,6 +8,8 @@ import {
   isMemoirTrim,
   mergeStructure,
   parseStructure,
+  storiesForBook,
+  type BookKind,
   type MemoirGrouping,
   type MemoirSource,
   type MemoirStructure,
@@ -36,12 +38,12 @@ export type MemoirDraft = {
 
 const PHOTO_LIMIT = 12_000_000;
 
-export async function loadMemoirDraft(userId: string, author: string, dict: Dictionary): Promise<MemoirDraft> {
+export async function loadMemoirDraft(userId: string, author: string, dict: Dictionary, book: BookKind): Promise<MemoirDraft> {
   const [userStories, memoir] = await Promise.all([
-    prisma.story.findMany({ where: accountStoryWhere(userId), orderBy: { createdAt: "asc" } }),
-    prisma.memoir.findUnique({ where: { userId } }),
+    prisma.story.findMany({ where: { ...accountStoryWhere(userId), kind: book }, orderBy: { createdAt: "asc" } }),
+    prisma.memoir.findUnique({ where: { userId_book: { userId, book } } }),
   ]);
-  const sources = userStories.map(toSource);
+  const sources = storiesForBook(userStories.map(toSource), book);
   const saved = memoir ? parseStructure(memoir.structureJson) : null;
   const grouping = memoir && isMemoirGrouping(memoir.grouping) ? memoir.grouping : saved?.grouping || "stage";
   const name = memoir?.authorName.trim() || author;
@@ -62,8 +64,8 @@ export async function loadMemoirDraft(userId: string, author: string, dict: Dict
   };
 }
 
-export async function saveMemoirDraft(userId: string, author: string, dict: Dictionary, draft: MemoirDraft) {
-  const stories = await prisma.story.findMany({ where: accountStoryWhere(userId), orderBy: { createdAt: "asc" } });
+export async function saveMemoirDraft(userId: string, author: string, dict: Dictionary, book: BookKind, draft: MemoirDraft) {
+  const stories = storiesForBook(await prisma.story.findMany({ where: { ...accountStoryWhere(userId), kind: book }, orderBy: { createdAt: "asc" } }), book);
   const name = draft.authorName.trim() || author;
   const structure = mergeStructure(stories.map(toSource), draft.grouping, draft.structure, (id) => memoirChapterTitle(dict, name, id, draft.grouping));
   const data = {
@@ -81,17 +83,17 @@ export async function saveMemoirDraft(userId: string, author: string, dict: Dict
     structureJson: JSON.stringify(structure),
   };
   await prisma.memoir.upsert({
-    where: { userId },
-    create: { userId, ...data },
+    where: { userId_book: { userId, book } },
+    create: { userId, book, ...data },
     update: data,
   });
   return { ...draft, ...data, structure, authorName: data.authorName };
 }
 
-export async function composeMemoirPdf(userId: string, author: string, dict: Dictionary, language: string): Promise<PdfBook> {
-  const draft = await loadMemoirDraft(userId, author, dict);
+export async function composeMemoirPdf(userId: string, author: string, dict: Dictionary, language: string, book: BookKind): Promise<PdfBook> {
+  const draft = await loadMemoirDraft(userId, author, dict, book);
   const stories = await prisma.story.findMany({
-    where: accountStoryWhere(userId),
+    where: { ...accountStoryWhere(userId), kind: book },
     include: { photos: { orderBy: { sortOrder: "asc" } } },
   });
   const byId = new Map(stories.map((story) => [story.id, story]));

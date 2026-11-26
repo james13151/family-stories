@@ -1,4 +1,5 @@
 import { accountStoryWhere, assertOneAccount } from "@/lib/account";
+import { storiesForBook, type BookKind } from "@/lib/memoir";
 import { planAllows } from "@/lib/billing/plans";
 import { prisma } from "@/lib/db";
 import { buildArchive, buildStoryCsv, buildStoryTxt, storyBody, type ExportMedia, type ExportStory } from "@/lib/export/stories";
@@ -6,17 +7,17 @@ import { storageGet } from "@/lib/storage";
 
 const MEDIA_LIMIT = 40_000_000;
 
-export async function loadExport(userId: string) {
-  const stories = await prisma.story.findMany({
-    where: accountStoryWhere(userId),
+export async function loadExport(userId: string, book: BookKind) {
+  const stories = storiesForBook(await prisma.story.findMany({
+    where: { ...accountStoryWhere(userId), kind: book },
     orderBy: { createdAt: "asc" },
     include: {
       audio: true,
       photos: { orderBy: { sortOrder: "asc" } },
     },
-  });
+  }), book);
   assertOneAccount(stories, userId);
-  const memoir = await prisma.memoir.findUnique({ where: { userId } });
+  const memoir = await prisma.memoir.findUnique({ where: { userId_book: { userId, book } } });
   let excluded = new Set<string>();
   if (memoir?.structureJson) {
     try {
@@ -47,14 +48,14 @@ export async function loadExport(userId: string) {
   return { stories: rows, records: stories };
 }
 
-export async function exportText(userId: string, accountName: string, kind: "txt" | "csv") {
-  const { stories } = await loadExport(userId);
+export async function exportText(userId: string, accountName: string, kind: "txt" | "csv", book: BookKind) {
+  const { stories } = await loadExport(userId, book);
   const text = kind === "csv" ? buildStoryCsv(userId, stories) : buildStoryTxt(userId, accountName, stories);
   return Buffer.from(text, "utf8");
 }
 
-export async function exportArchive(userId: string, accountName: string) {
-  const { stories, records } = await loadExport(userId);
+export async function exportArchive(userId: string, accountName: string, book: BookKind) {
+  const { stories, records } = await loadExport(userId, book);
   const media: ExportMedia[] = [];
   for (const story of records) {
     for (const photo of story.photos) {

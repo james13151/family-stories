@@ -10,8 +10,10 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Dictionary } from "@/lib/i18n/types";
 import { memoirChapterTitle } from "@/lib/memoir/labels";
 import {
+  bookFileStem,
   chapterKey,
   mergeStructure,
+  type BookKind,
   type MemoirGrouping,
   type MemoirSource,
   type MemoirTrim,
@@ -29,11 +31,13 @@ const selectClass = "h-12 w-full rounded-xl border border-[#e0d3bf] bg-[#fffaf3]
 export function MemoirEditor({
   dict,
   author,
+  book,
   stories,
   initial,
 }: {
   dict: Dictionary;
   author: string;
+  book: BookKind;
   stories: BookletStory[];
   initial: {
     title: string;
@@ -85,7 +89,7 @@ export function MemoirEditor({
   const displayAuthor = authorName.trim() || author;
 
   function payload() {
-    return { title, subtitle, authorName, grouping, dedication, preface, trim, cover, paper, coverStyle, storyTemplate, chapters, excluded };
+    return { title, subtitle, authorName, grouping, dedication, preface, trim, cover, paper, coverStyle, storyTemplate, chapters, excluded, book };
   }
 
   async function save() {
@@ -118,14 +122,9 @@ export function MemoirEditor({
     if (!ok) return;
     setPending(true);
     try {
-      const path = kind === "pdf" || kind === "epub" ? `/api/memoir/${kind}` : `/api/export/${kind === "zip" ? "archive" : kind}`;
-      const filename = {
-        pdf: "hearthlight-memoir.pdf",
-        epub: "hearthlight-memoir.epub",
-        txt: "hearthlight-stories.txt",
-        csv: "hearthlight-stories.csv",
-        zip: "hearthlight-archive.zip",
-      }[kind];
+      const path = `${kind === "pdf" || kind === "epub" ? `/api/memoir/${kind}` : `/api/export/${kind === "zip" ? "archive" : kind}`}?book=${book}`;
+      const stem = bookFileStem(book);
+      const filename = `${stem}.${kind === "zip" ? "zip" : kind}`;
       const response = await fetch(path);
       if (!response.ok) {
         setNote(dict.errors.generic);
@@ -362,6 +361,7 @@ export function MemoirEditor({
           coverStyle={coverStyle}
           binding={cover}
           template={storyTemplate}
+          book={book}
         />
       </div>
     </div>

@@ -3,6 +3,7 @@ import { accountStoryWhere, assertOneAccount } from "../lib/account";
 import { billingStatus, familyCheckoutRequest, planAllows } from "../lib/billing/plans";
 import { buildArchive, buildStoryCsv, buildStoryTxt, fileSlug } from "../lib/export/stories";
 import { preparePrintCheckout, PRINT_COVERS, PRINT_PAPERS, PRINT_TRIMS } from "../lib/print/catalog";
+import { storiesForBook } from "../lib/memoir";
 import { storyLayout } from "../lib/memoir/design";
 import { databaseKind, storageKind } from "../lib/runtime";
 
@@ -42,6 +43,14 @@ delete process.env.STRIPE_SECRET_KEY;
 delete process.env.STRIPE_PRICE_FAMILY;
 if (billingStatus().enabled) errors.push("billing stayed enabled after the test");
 
+const bothBooks = [
+  { id: "life-1", kind: "life" },
+  { id: "child-1", kind: "child" },
+  { id: "life-2", kind: "life" },
+];
+if (storiesForBook(bothBooks, "life").some((story) => story.kind !== "life")) errors.push("life book includes a child's story");
+if (storiesForBook(bothBooks, "child").some((story) => story.kind !== "child")) errors.push("children's book includes a life story");
+if (storiesForBook(bothBooks, "life").length !== 2 || storiesForBook(bothBooks, "child").length !== 1) errors.push("book split dropped or duplicated a story");
 if (storyLayout("classic", false, false) !== "classic") errors.push("a plain story should stay classic");
 if (storyLayout("classic", true, false) !== "photo") errors.push("a photographed story should use the photo page");
 if (storyLayout("spread", true, false) !== "spread") errors.push("a photographed story should open as a spread");

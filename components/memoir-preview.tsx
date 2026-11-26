@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { BookletStory } from "@/components/booklet";
 import { Button } from "@/components/ui/button";
 import type { Dictionary } from "@/lib/i18n/types";
+import type { BookKind } from "@/lib/memoir";
 import type { CoverStyle, StoryTemplate } from "@/lib/memoir/design";
 import { LANE_IMAGE, storyLayout } from "@/lib/memoir/design";
 import type { PrintCoverCode } from "@/lib/print/catalog";
@@ -23,6 +24,7 @@ export function MemoirPreview({
   coverStyle,
   binding,
   template,
+  book,
 }: {
   dict: Dictionary;
   author: string;
@@ -35,10 +37,11 @@ export function MemoirPreview({
   coverStyle: CoverStyle;
   binding: PrintCoverCode;
   template: StoryTemplate;
+  book: BookKind;
 }) {
   const byId = new Map(stories.map((story) => [story.id, story]));
-  const coverTitle = title.trim() || dict.booklet.fallbackTitle;
-  const coverSubtitle = subtitle.trim() || dict.booklet.fallbackSubtitle;
+  const coverTitle = title.trim() || (book === "child" ? dict.booklet.childFallbackTitle : dict.booklet.fallbackTitle);
+  const coverSubtitle = subtitle.trim() || (book === "child" ? dict.booklet.childFallbackSubtitle : dict.booklet.fallbackSubtitle);
   const hard = binding !== "softcover";
   let folio = 0;
   const nextFolio = () => {

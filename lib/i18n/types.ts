@@ -420,6 +420,14 @@ export type Dictionary = {
     templateSpread: string;
     fallbackTitle: string;
     fallbackSubtitle: string;
+    bookPicker: string;
+    bookLife: string;
+    bookChild: string;
+    childTitle: string;
+    childLead: string;
+    childFallbackTitle: string;
+    childFallbackSubtitle: string;
+    childEmpty: string;
     paper: string;
     paperUncoated: string;
     paperIvory: string;
