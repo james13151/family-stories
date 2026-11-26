@@ -1,4 +1,5 @@
 import { inflateRawSync } from "zlib";
+import { keptTranscript } from "../lib/stories";
 import { accountStoryWhere, assertOneAccount } from "../lib/account";
 import { billingStatus, familyCheckoutRequest, planAllows } from "../lib/billing/plans";
 import { buildArchive, buildStoryCsv, buildStoryTxt, fileSlug } from "../lib/export/stories";
@@ -60,6 +61,10 @@ if (storyLayout("photo", false, false) !== "photo") errors.push("the photo templ
 if (databaseKind("file:../data/hearthlight.db") !== "sqlite") errors.push("sqlite url not recognized");
 if (databaseKind("postgresql://localhost/hearthlight") !== "postgres") errors.push("postgres url not recognized");
 if (storageKind("local").driver !== "local" || storageKind("s3").driver !== "s3") errors.push("storage driver not recognized");
+if (keptTranscript("saved words", "spoken words") !== "spoken words") errors.push("a recording should keep its own transcript");
+if (keptTranscript("saved words", "") !== "saved words") errors.push("removing a recording should keep the saved transcript");
+if (keptTranscript("saved words", "   ") !== "saved words") errors.push("a blank recording transcript should not wipe saved words");
+if (keptTranscript("", null) !== "") errors.push("a story with no transcript should stay empty");
 
 try {
   accountStoryWhere("");

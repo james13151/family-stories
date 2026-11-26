@@ -31,3 +31,10 @@ export function serializeStory(
 }
 
 export type StoryPayload = ReturnType<typeof serializeStory>;
+
+// The transcript is saved text. A recording that still exists owns the current
+// transcript. After that file is removed, the copy kept on the story remains.
+export function keptTranscript(saved: string, recording: string | null | undefined) {
+  if (recording && recording.trim()) return recording;
+  return saved || "";
+}
