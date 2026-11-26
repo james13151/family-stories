@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Booklet } from "@/components/booklet";
+import { MemoirEditor } from "@/components/memoir-editor";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getRequestDictionary } from "@/lib/request-locale";
 import { formatWhen } from "@/lib/locale";
 import { storyMemory } from "@/lib/memories";
+import { loadMemoirDraft } from "@/lib/memoir/compose";
 
 export default async function BookPage() {
   const user = await getCurrentUser();
@@ -16,6 +18,7 @@ export default async function BookPage() {
     orderBy: { createdAt: "asc" },
     include: { photos: { orderBy: { sortOrder: "asc" } } },
   });
+  const draft = stories.length ? await loadMemoirDraft(user.id, user.name, dict) : null;
 
   return (
     <div>
@@ -27,28 +30,43 @@ export default async function BookPage() {
         </p>
       </div>
       <div className="mt-6">
-        <Booklet
-          dict={dict}
-          author={user.name}
-          compiled={formatWhen(new Date(), locale)}
-          stories={stories.map((story) => {
-            const memory = storyMemory(story);
-            return {
-              id: story.id,
-              title: story.title,
-              question: story.questionText,
-              bodyHtml: story.bodyHtml,
-              when: formatWhen(story.createdAt, locale),
-              createdAt: story.createdAt.toISOString(),
-              kind: memory.kind,
-              childName: story.childName,
-              theme: memory.theme,
-              stage: memory.stage,
-              places: memory.places,
-              photos: story.photos.map((photo) => ({ id: photo.id, caption: photo.caption })),
-            };
-          })}
-        />
+        {draft ? (
+          <MemoirEditor
+            dict={dict}
+            author={user.name}
+            compiled={formatWhen(new Date(), locale)}
+            initial={{
+              title: draft.title,
+              subtitle: draft.subtitle,
+              authorName: draft.authorName,
+              grouping: draft.grouping,
+              dedication: draft.dedication,
+              preface: draft.preface,
+              trim: draft.trim,
+              chapters: draft.structure.chapters,
+              excluded: draft.structure.excluded,
+            }}
+            stories={stories.map((story) => {
+              const memory = storyMemory(story);
+              return {
+                id: story.id,
+                title: story.title,
+                question: story.questionText,
+                bodyHtml: story.bodyHtml,
+                when: formatWhen(story.createdAt, locale),
+                createdAt: story.createdAt.toISOString(),
+                kind: memory.kind,
+                childName: story.childName,
+                theme: memory.theme,
+                stage: memory.stage,
+                places: memory.places,
+                photos: story.photos.map((photo) => ({ id: photo.id, caption: photo.caption })),
+              };
+            })}
+          />
+        ) : (
+          <Booklet dict={dict} author={user.name} compiled={formatWhen(new Date(), locale)} stories={[]} />
+        )}
       </div>
     </div>
   );

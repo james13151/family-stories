@@ -40,20 +40,45 @@ function personKey(story: BookletStory) {
   return `child:${story.childName || "_"}`;
 }
 
+export type BookletEdition = {
+  title: string;
+  subtitle: string;
+  author: string;
+  dedication: string;
+  preface: string;
+  chapters: { id: string; title: string; storyIds: string[] }[];
+};
+
 export function Booklet({
   dict,
   author,
   compiled,
   stories,
+  edition,
 }: {
   dict: Dictionary;
   author: string;
   compiled: string;
   stories: BookletStory[];
+  edition?: BookletEdition;
 }) {
   const [order, setOrder] = useState<"stage" | "theme" | "person">("stage");
 
   const chapters = useMemo(() => {
+    if (edition) {
+      const byId = new Map(stories.map((story) => [story.id, story]));
+      let number = 0;
+      return edition.chapters.flatMap((chapter) => {
+        const items = chapter.storyIds.flatMap((id) => {
+          const story = byId.get(id);
+          if (!story) return [];
+          number += 1;
+          return [{ ...story, number }];
+        });
+        if (!items.length) return [];
+        return [{ id: chapter.id, title: chapter.title, stories: items }];
+      });
+    }
     const copy = [...stories];
     copy.sort((a, b) => {
       if (order === "theme") {
@@ -93,7 +118,7 @@ export function Booklet({
       chapter.stories.push({ ...story, number });
     }
     return groups;
-  }, [author, dict, order, stories]);
+  }, [author, dict, edition, order, stories]);
 
   if (!stories.length) {
     return (
@@ -107,7 +132,7 @@ export function Booklet({
   return (
     <div className="booklet">
       <div className="no-print mb-6 flex flex-wrap items-center gap-2">
-        {([
+        {edition ? null : ([
           ["stage", dict.booklet.byStage],
           ["theme", dict.booklet.byTheme],
           ["person", dict.booklet.byPerson],
@@ -121,12 +146,23 @@ export function Booklet({
 
       <header className="booklet-leaf booklet-cover book-sheet flex min-h-[70vh] flex-col items-center justify-center px-8 py-16 text-center">
         <p className="text-sm tracking-[0.28em] text-[#8d3b2e]">{dict.booklet.coverKicker}</p>
-        <h2 className="mt-6 text-5xl leading-tight">{dict.booklet.coverTitle}</h2>
-        <p className="mt-4 text-xl text-[#4d4032]">{dict.booklet.coverSubtitle}</p>
+        <h2 className="mt-6 text-5xl leading-tight">{edition?.title.trim() || dict.booklet.coverTitle}</h2>
+        <p className="mt-4 text-xl text-[#4d4032]">{edition?.subtitle.trim() || dict.booklet.coverSubtitle}</p>
         <div className="my-8 h-px w-16 bg-[#a6844a]" />
-        <p className="text-lg">{fillTemplate(dict.booklet.coverBy, { name: author })}</p>
+        <p className="text-lg">{fillTemplate(dict.booklet.coverBy, { name: edition?.author.trim() || author })}</p>
         <p className="mt-2 text-[#6d5e4c]">{compiled}</p>
       </header>
+
+      {edition?.dedication.trim() ? (
+        <section className="booklet-leaf book-sheet mt-6 flex min-h-[40vh] items-center justify-center p-10 text-center">
+          <p className="max-w-md whitespace-pre-wrap text-xl leading-relaxed">{edition.dedication.trim()}</p>
+        </section>
+      ) : null}
+      {edition?.preface.trim() ? (
+        <section className="booklet-leaf book-sheet mt-6 p-6 sm:p-10">
+          <div className="max-w-2xl whitespace-pre-wrap text-lg leading-relaxed">{edition.preface.trim()}</div>
+        </section>
+      ) : null}
 
       <nav className="booklet-leaf booklet-toc book-sheet mt-6 p-6 sm:p-10" aria-label={dict.booklet.contents}>
         <h2 className="text-3xl">{dict.booklet.contents}</h2>
