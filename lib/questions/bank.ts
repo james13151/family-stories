@@ -1,3 +1,4 @@
+import { ADDED_QUESTIONS } from "@/lib/questions/bank-more";
 import type { Question, Theme } from "@/lib/questions/types";
 
 type Extra = {
@@ -1057,6 +1058,7 @@ export const QUESTIONS: Question[] = [
     "即使沒有說出口，你怎樣知道自己是被愛著的？",
     { also: ["marriage"] },
   ),
+  ...ADDED_QUESTIONS,
 ];
 
 export function questionById(id: string) {

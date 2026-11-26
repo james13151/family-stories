@@ -56,7 +56,7 @@ The sign-in page can enter either account for you. Their stories are not visible
 | --- | --- |
 | `npm run dev` | Development server on port 43123 |
 | `npm run build` and `npm start` | Production build, same port |
-| `npm run check` | Confirms the question bank has 100+ items in all three languages |
+| `npm run check` | Confirms the life bank is about 300 questions, the child bank is at least 40, and every item exists in English, Simplified Chinese, and Traditional Chinese |
 | `npm run gift-card:sample` | Rewrites the sample cards in `docs/samples/` |
 | `npm run lint` | ESLint |
 | `npm run android:url` | Prints the site address that would be baked into the Android APK |
@@ -96,7 +96,7 @@ Passwords are hashed with bcrypt. The session cookie is `httpOnly` and `SameSite
 
 ### Questions and profile
 
-The bank is `lib/questions/bank.ts`: 135 questions, each written in English, Simplified Chinese, and Traditional Chinese. Traditional wording follows written Chinese used in Hong Kong where the everyday word differs (薪金, 街市, 電郵, 農曆新年, 爺爺嫲嫲 / 公公婆婆), not a mechanical character swap of the Simplified line.
+The life bank is `lib/questions/bank.ts`: about 300 questions, each written in English, Simplified Chinese, and Traditional Chinese. The smaller bank for memories of a child lives in `lib/questions/child-bank.ts`. Traditional wording follows written Chinese used in Hong Kong where the everyday word differs (薪金, 街市, 電郵, 農曆新年, 利是, 單車, 爺爺嫲嫲 / 公公婆婆), not a mechanical character swap of the Simplified line.
 
 On the question page the bank can be browsed three ways, in all three languages. By theme, questions are grouped and can sit in more than one category: childhood, family, school, career (the old “work” label), self-development, marriage, children, food, traditions, migration, later life, and the rest of the themes. By time, each question has a life stage and the groups run from family beginnings through childhood, school, coming of age, career, marriage, and children, then later life, with a last group for memories that run across a life. By place, only the questions about a place are shown, gathered as hometown, home, a city or region, moving, or travel. Nothing in that grouping is a private address. Suggested questions still sit above the groups.
 
