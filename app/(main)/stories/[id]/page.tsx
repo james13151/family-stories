@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { AttachedRecording } from "@/components/attached-recording";
 import { StoryActions } from "@/components/story-actions";
 import { StoryBook } from "@/components/story-book";
 import { getCurrentUser } from "@/lib/auth";
@@ -34,10 +35,7 @@ export default async function StoryPage({ params }: { params: Promise<{ id: stri
         <StoryActions dict={dict} storyId={story.id} />
       </div>
       {story.audio ? (
-        <div className="no-print mb-6 rounded-2xl bg-[#fffaf3] p-4 ring-1 ring-[#e0d3bf]">
-          <p className="mb-2">{dict.preview.listen}</p>
-          <audio className="w-full" controls preload="metadata" src={`/api/media/audio/${story.audio.id}`} />
-        </div>
+        <AttachedRecording dict={dict} storyId={story.id} audioId={story.audio.id} label={dict.preview.listen} framed />
       ) : null}
       <StoryBook
         question={story.questionText}

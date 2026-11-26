@@ -1,6 +1,8 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { keptTranscript } from "@/lib/stories";
 import { storageDelete, storagePut } from "@/lib/storage";
 
 export const runtime = "nodejs";
@@ -27,27 +29,34 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   await storagePut(storageKey, bytes, mimeType);
   if (story.audio) await storageDelete(story.audio.storageKey);
   const durationRaw = Number(form.get("duration"));
-  const audio = story.audio
-    ? await prisma.audio.update({
+  const durationSec = Number.isFinite(durationRaw) ? durationRaw : null;
+  const audio = await prisma.$transaction(async (tx) => {
+    if (story.transcript) {
+      await tx.story.update({ where: { id: story.id }, data: { transcript: "" } });
+    }
+    if (story.audio) {
+      return tx.audio.update({
         where: { id: story.audio.id },
         data: {
           storageKey,
           mimeType,
           bytes: bytes.length,
-          durationSec: Number.isFinite(durationRaw) ? durationRaw : null,
+          durationSec,
           transcript: "",
           sttProvider: "",
         },
-      })
-    : await prisma.audio.create({
-        data: {
-          storyId: story.id,
-          storageKey,
-          mimeType,
-          bytes: bytes.length,
-          durationSec: Number.isFinite(durationRaw) ? durationRaw : null,
-        },
       });
+    }
+    return tx.audio.create({
+      data: {
+        storyId: story.id,
+        storageKey,
+        mimeType,
+        bytes: bytes.length,
+        durationSec,
+      },
+    });
+  });
   return NextResponse.json({
     audio: {
       id: audio.id,
@@ -56,4 +65,31 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       durationSec: audio.durationSec,
     },
   });
+}
+
+export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const { id } = await context.params;
+  const story = await prisma.story.findFirst({
+    where: { id, userId: user.id },
+    include: { audio: true },
+  });
+  if (!story?.audio) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const audio = story.audio;
+  await storageDelete(audio.storageKey);
+  try {
+    await prisma.$transaction(async (tx) => {
+      const current = await tx.audio.findUnique({ where: { id: audio.id } });
+      if (!current) return;
+      const transcript = keptTranscript(story.transcript, current.transcript);
+      if (transcript !== story.transcript) {
+        await tx.story.update({ where: { id: story.id }, data: { transcript } });
+      }
+      await tx.audio.delete({ where: { id: current.id } });
+    });
+  } catch (error) {
+    if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2025") throw error;
+  }
+  return NextResponse.json({ ok: true });
 }

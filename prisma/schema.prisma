@@ -90,6 +90,9 @@ model Story {
   questionText String
   title        String   @default("")
   bodyHtml     String   @default("")
+  // Spoken words kept after the recording file is removed. While a recording
+  // is attached, the current transcript lives on Audio instead.
+  transcript   String   @default("")
   formatJson   String   @default("{}")
   kind         String   @default("life")
   childName    String   @default("")

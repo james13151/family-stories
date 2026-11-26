@@ -261,6 +261,10 @@ export type Dictionary = {
     sttFailed: string;
     sttEmpty: string;
     recordAgain: string;
+    removeRecording: string;
+    removeRecordingTitle: string;
+    removeRecordingBody: string;
+    recordingRemoved: string;
     removePhoto: string;
     titleLabel: string;
     tooBig: string;

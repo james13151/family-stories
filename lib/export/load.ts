@@ -3,6 +3,7 @@ import { storiesForBook, type BookKind } from "@/lib/memoir";
 import { planAllows } from "@/lib/billing/plans";
 import { prisma } from "@/lib/db";
 import { buildArchive, buildStoryCsv, buildStoryTxt, storyBody, type ExportMedia, type ExportStory } from "@/lib/export/stories";
+import { keptTranscript } from "@/lib/stories";
 import { storageGet } from "@/lib/storage";
 
 const MEDIA_LIMIT = 40_000_000;
@@ -42,7 +43,7 @@ export async function loadExport(userId: string, book: BookKind) {
     title: story.title,
     question: story.questionText,
     body: storyBody(story.bodyHtml),
-    transcript: story.audio?.transcript || "",
+    transcript: keptTranscript(story.transcript, story.audio?.transcript),
     inBook: !excluded.has(story.id),
   }));
   return { stories: rows, records: stories };

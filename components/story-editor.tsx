@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { AttachedRecording } from "@/components/attached-recording";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { encodeWavPcm16, mixAndDownsample } from "@/lib/audio/wav";
@@ -28,6 +29,7 @@ export function StoryEditor({ dict, story }: { dict: Dictionary; story: StoryPay
   const tick = useRef<number | null>(null);
   const elapsed = useRef(0);
   const saveTimer = useRef<number | null>(null);
+  const recordingPresent = useRef(Boolean(story.audio));
   const [title, setTitle] = useState(story.title);
   const [format, setFormat] = useState<StoryFormat>(story.format);
   const [photos, setPhotos] = useState(story.photos);
@@ -123,6 +125,7 @@ export function StoryEditor({ dict, story }: { dict: Dictionary; story: StoryPay
       setNote(dict.editor.sttFailed);
       return;
     }
+    recordingPresent.current = true;
     setAudio(savedPayload.audio);
     setNote(dict.editor.savedAudio);
     if (!wav) {
@@ -135,6 +138,10 @@ export function StoryEditor({ dict, story }: { dict: Dictionary; story: StoryPay
     const slow = window.setTimeout(() => setNote(dict.editor.preparing), 2500);
     const transcribed = await fetch(`/api/stories/${story.id}/transcribe`, { method: "POST" });
     window.clearTimeout(slow);
+    if (!recordingPresent.current) {
+      setPhase("idle");
+      return;
+    }
     const payload = (await transcribed.json()) as { text?: string; error?: string };
     setPhase("idle");
     if (!transcribed.ok) {
@@ -300,10 +307,18 @@ export function StoryEditor({ dict, story }: { dict: Dictionary; story: StoryPay
         )}
         {note ? <p className="mt-3 text-base">{note}</p> : null}
         {audio ? (
-          <div className="mt-4">
-            <p className="mb-2 text-sm text-[#6d5e4c]">{dict.editor.savedAudio}</p>
-            <audio className="w-full" controls src={`/api/media/audio/${audio.id}`} preload="metadata" />
-          </div>
+          <AttachedRecording
+            dict={dict}
+            storyId={story.id}
+            audioId={audio.id}
+            label={dict.editor.savedAudio}
+            disabled={phase === "recording" || phase === "uploading"}
+            onRemoved={() => {
+              recordingPresent.current = false;
+              setAudio(null);
+              setNote(dict.editor.recordingRemoved);
+            }}
+          />
         ) : null}
       </div>
 
