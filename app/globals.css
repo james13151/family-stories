@@ -150,6 +150,29 @@
   }
 }
 
+.book-preview {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 250, 243, 0.8), transparent 42%),
+    #e7dcc8;
+  border-radius: 1.25rem;
+  padding: 1.25rem 0.75rem 2rem;
+}
+
+.book-preview .booklet-leaf {
+  max-width: 40rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.book-grip {
+  touch-action: none;
+  cursor: grab;
+}
+
+.book-grip:active {
+  cursor: grabbing;
+}
+
 .book-sheet {
   background: #fffaf3;
   border: 1px solid rgba(80, 52, 28, 0.08);
@@ -238,6 +261,10 @@
   }
   .no-print {
     display: none !important;
+  }
+  .book-preview {
+    background: transparent;
+    padding: 0;
   }
   main {
     max-width: none !important;

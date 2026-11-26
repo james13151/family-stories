@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { fillTemplate } from "@/lib/locale";
 import type { Dictionary } from "@/lib/i18n/types";
 import { storyMemory } from "@/lib/memories";
+import { accountStoryWhere } from "@/lib/account";
 import {
   isMemoirGrouping,
   isMemoirTrim,
@@ -12,6 +13,7 @@ import {
   type MemoirStructure,
   type MemoirTrim,
 } from "@/lib/memoir";
+import { isPrintCover, isPrintPaper, type PrintCoverCode, type PrintPaperCode } from "@/lib/print/catalog";
 import { memoirChapterTitle } from "@/lib/memoir/labels";
 import type { PdfBook } from "@/lib/memoir/render-pdf";
 import { storageGet } from "@/lib/storage";
@@ -24,6 +26,8 @@ export type MemoirDraft = {
   dedication: string;
   preface: string;
   trim: MemoirTrim;
+  cover: PrintCoverCode;
+  paper: PrintPaperCode;
   structure: MemoirStructure;
 };
 
@@ -31,7 +35,7 @@ const PHOTO_LIMIT = 12_000_000;
 
 export async function loadMemoirDraft(userId: string, author: string, dict: Dictionary): Promise<MemoirDraft> {
   const [userStories, memoir] = await Promise.all([
-    prisma.story.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
+    prisma.story.findMany({ where: accountStoryWhere(userId), orderBy: { createdAt: "asc" } }),
     prisma.memoir.findUnique({ where: { userId } }),
   ]);
   const sources = userStories.map(toSource);
@@ -47,12 +51,14 @@ export async function loadMemoirDraft(userId: string, author: string, dict: Dict
     dedication: memoir?.dedication || "",
     preface: memoir?.preface || "",
     trim: memoir && isMemoirTrim(memoir.trim) ? memoir.trim : "a5",
+    cover: memoir && isPrintCover(memoir.cover) ? memoir.cover : "hardcover",
+    paper: memoir && isPrintPaper(memoir.paper) ? memoir.paper : "uncoated",
     structure,
   };
 }
 
 export async function saveMemoirDraft(userId: string, author: string, dict: Dictionary, draft: MemoirDraft) {
-  const stories = await prisma.story.findMany({ where: { userId }, orderBy: { createdAt: "asc" } });
+  const stories = await prisma.story.findMany({ where: accountStoryWhere(userId), orderBy: { createdAt: "asc" } });
   const name = draft.authorName.trim() || author;
   const structure = mergeStructure(stories.map(toSource), draft.grouping, draft.structure, (id) => memoirChapterTitle(dict, name, id, draft.grouping));
   const data = {
@@ -63,6 +69,8 @@ export async function saveMemoirDraft(userId: string, author: string, dict: Dict
     dedication: draft.dedication.trim(),
     preface: draft.preface.trim(),
     trim: draft.trim,
+    cover: draft.cover,
+    paper: draft.paper,
     structureJson: JSON.stringify(structure),
   };
   await prisma.memoir.upsert({
@@ -76,7 +84,7 @@ export async function saveMemoirDraft(userId: string, author: string, dict: Dict
 export async function composeMemoirPdf(userId: string, author: string, dict: Dictionary, language: string): Promise<PdfBook> {
   const draft = await loadMemoirDraft(userId, author, dict);
   const stories = await prisma.story.findMany({
-    where: { userId },
+    where: accountStoryWhere(userId),
     include: { photos: { orderBy: { sortOrder: "asc" } } },
   });
   const byId = new Map(stories.map((story) => [story.id, story]));
@@ -116,6 +124,8 @@ export async function composeMemoirPdf(userId: string, author: string, dict: Dic
     chapterLabel: (number) => fillTemplate(dict.booklet.chapter, { number }),
     language,
     trim: draft.trim,
+    cover: draft.cover,
+    paper: draft.paper,
     chapters,
   };
 }

@@ -315,6 +315,11 @@ export type Dictionary = {
     gift: string;
     giftHelp: string;
     saved: string;
+    planTitle: string;
+    planGift: string;
+    planFamily: string;
+    planLine: string;
+    planBody: string;
   };
   gift: {
     title: string;
@@ -401,8 +406,22 @@ export type Dictionary = {
     trim: string;
     trimA5: string;
     trimTrade: string;
+    trimSixNine: string;
+    cover: string;
+    coverHardcover: string;
+    coverSoftcover: string;
+    paper: string;
+    paperUncoated: string;
+    paperIvory: string;
+    paperCoated: string;
     downloadPdf: string;
     downloadEpub: string;
+    downloadTxt: string;
+    downloadCsv: string;
+    downloadZip: string;
+    drag: string;
+    preview: string;
+    exportsNote: string;
     leaveOut: string;
     putBack: string;
     moveUp: string;

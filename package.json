@@ -10,7 +10,7 @@
     "setup": "prisma generate && prisma db push && tsx scripts/seed.ts",
     "seed": "tsx scripts/seed.ts",
     "seed:reset": "tsx scripts/seed.ts --reset",
-    "check": "tsx scripts/check-content.ts && tsx scripts/check-frequency.ts && tsx scripts/check-memoir.ts",
+    "check": "tsx scripts/check-content.ts && tsx scripts/check-frequency.ts && tsx scripts/check-memoir.ts && tsx scripts/check-product.ts",
     "gift-card:sample": "tsx scripts/gift-card-sample.ts",
     "android:url": "tsx scripts/print-capacitor-url.ts",
     "android:sync": "cap sync android",

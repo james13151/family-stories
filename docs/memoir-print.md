@@ -8,18 +8,32 @@ The browser print button remains for reading on screen or saving a quick PDF. Th
 
 The first page is a cover spread: back cover, spine, and front cover, plus 3 mm bleed. The pages after it are the interior: title page, dedication and preface when they were written, contents, a chapter opening, then each story and its photographs. Interior pages are padded to an even count. Page numbers start at 1 on the interior and are not printed on the cover.
 
-Trim sizes:
+The choices are a small catalog in `lib/print/catalog.ts`. Each trim, cover, and paper has a stable code, a display name, and empty fields for a later partner SKU, price, and fulfillment note. Nothing in this version calls a print company or invents a price.
 
-| Choice | Trim | Page size including 3 mm bleed |
+| Code | What it is |
+| --- | --- |
+| `a5` | A5, 148 × 210 mm. The default. |
+| `trade` | 5.5 × 8.5 in |
+| `trade-6x9` | 6 × 9 in |
+| `hardcover` | Case cover. Spine adds 2 mm for boards. |
+| `softcover` | Soft cover. Spine is the text block only. |
+| `uncoated` | Standard uncoated, about 0.05 mm a page. |
+| `ivory` | Premium ivory, about 0.06 mm a page, cream page. |
+| `coated` | Coated photo, about 0.07 mm a page. |
+
+Trim sizes, including 3 mm bleed:
+
+| Choice | Trim | Page size including bleed |
 | --- | --- | --- |
 | A5 (default) | 148 × 210 mm | 154 × 216 mm |
 | 5.5 × 8.5 in | 139.7 × 215.9 mm | 145.7 × 221.9 mm |
+| 6 × 9 in | 152.4 × 228.6 mm | 158.4 × 234.6 mm |
 
 Interior margins, measured inside the trim, are about 16 mm at the top, 18 mm at the bottom, 14 mm on the outer edge, and 20 mm on the binding edge. Crop marks sit in the bleed. Fonts are embedded: Liberation Serif for Latin, and a subset of Droid Sans Fallback for Chinese. JPEG and PNG photographs are embedded at the size they were uploaded. WebP and GIF are left out of the print file; save those pictures as JPEG if they should appear. The file does not enlarge a small photograph.
 
 ## Spine
 
-Spine width is `page count × 0.05 mm`, rounded to 0.1 mm. The page count is the interior, not the cover. 0.05 mm is about the thickness of one side of an 80 gsm text sheet. A 160-page interior is about 8 mm. The figure is printed on the back cover. A spine of at least 8 mm also gets the book title turned along the spine. Thinner books leave the spine blank, because there is not enough room for type.
+Spine width is the interior page count times the selected paper's millimetres per page, plus 2 mm when the cover is hardcover, rounded to 0.1 mm. The page count is the interior, not the cover. Uncoated paper uses 0.05 mm, about one side of an 80 gsm sheet. A hardcover with 100 interior pages is about 7 mm. The figure is printed on the back cover together with the trim, cover, and paper codes. A spine of at least 8 mm also gets the book title turned along the spine. Thinner books leave the spine blank, because there is not enough room for type. `preparePrintCheckout` in the catalog returns the selection and an empty partner SKU. It does not place an order.
 
 This is an estimate. A shop that uses different paper, or that counts a leaf differently, will remeasure. Tell them the assumption.
 

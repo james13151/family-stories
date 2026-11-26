@@ -1,6 +1,7 @@
 import { inflateRawSync } from "zlib";
 import { PDFDocument } from "pdf-lib";
 import { mergeStructure, spineMillimetres, trimSize, type MemoirSource } from "../lib/memoir";
+import { spineFor } from "../lib/print/catalog";
 import { renderMemoirPdf } from "../lib/memoir/render-pdf";
 import { renderMemoirEpub } from "../lib/memoir/render-epub";
 import { zipFiles } from "../lib/memoir/zip";
@@ -58,6 +59,10 @@ const a5 = trimSize("a5");
 const trade = trimSize("trade");
 if (a5.widthMm !== 148 || a5.heightMm !== 210) errors.push("A5 trim is wrong");
 if (Math.abs(trade.widthMm - 139.7) > 0.1 || Math.abs(trade.heightMm - 215.9) > 0.1) errors.push("trade trim is wrong");
+const six = trimSize("trade-6x9");
+if (Math.abs(six.widthMm - 152.4) > 0.1 || Math.abs(six.heightMm - 228.6) > 0.1) errors.push("6x9 trim is wrong");
+if (spineFor(100, "uncoated", "softcover") !== 5) errors.push("softcover spine should stay the paper thickness");
+if (spineFor(100, "uncoated", "hardcover") !== 7) errors.push("hardcover spine should add the board allowance");
 
 const tiny = zipFiles([
   { name: "mimetype", data: Buffer.from("application/epub+zip"), store: true },
@@ -76,6 +81,8 @@ const book = {
   chapterLabel: (number: number) => `Chapter ${number}`,
   language: "zh-Hant",
   trim: "a5" as const,
+  cover: "hardcover" as const,
+  paper: "uncoated" as const,
   chapters: [
     {
       title: "Childhood 童年",

@@ -28,10 +28,15 @@ model User {
   hobbies            String    @default("")
   openTopics         String    @default("[]")
   skipTopics         String    @default("[]")
+  plan               String    @default("gift")
+  planStatus         String    @default("active")
+  stripeCustomerId   String    @default("")
+  stripeSubscriptionId String @default("")
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
   stories            Story[]
   memoir             Memoir?
+  printIntents       PrintIntent[]
 }
 
 model Memoir {
@@ -45,9 +50,31 @@ model Memoir {
   dedication    String   @default("")
   preface       String   @default("")
   trim          String   @default("a5")
+  cover         String   @default("hardcover")
+  paper         String   @default("uncoated")
   structureJson String   @default("{}")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+// A later print checkout. This version never charges and does not create rows.
+model PrintIntent {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status           String   @default("draft")
+  trim             String   @default("a5")
+  cover            String   @default("hardcover")
+  paper            String   @default("uncoated")
+  currency         String   @default("HKD")
+  amountCents      Int      @default(0)
+  partnerSku       String   @default("")
+  stripeCheckoutId String   @default("")
+  note             String   @default("")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId, createdAt])
 }
 
 model Story {

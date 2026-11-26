@@ -31,12 +31,13 @@ export function zipFiles(files: { name: string; data: Buffer; store?: boolean }[
   for (const file of files) {
     const name = Buffer.from(file.name);
     const store = file.store ?? false;
+    const flags = /[^\u0000-\u007f]/.test(file.name) ? 0x800 : 0;
     const data = store ? file.data : deflateRawSync(file.data);
     const crc = crc32(file.data);
     const local = Buffer.concat([
       u32(0x04034b50),
       u16(20),
-      u16(store ? 0 : 0),
+      u16(flags),
       u16(store ? 0 : 8),
       u16(0),
       u16(0),
@@ -54,7 +55,7 @@ export function zipFiles(files: { name: string; data: Buffer; store?: boolean }[
         u32(0x02014b50),
         u16(20),
         u16(20),
-        u16(0),
+        u16(flags),
         u16(store ? 0 : 8),
         u16(0),
         u16(0),

@@ -1,12 +1,13 @@
 import { BOOK_STAGE_ORDER, stageRank } from "@/lib/memories";
+import { trimByCode, type PrintTrimCode } from "@/lib/print/catalog";
 import { CHILD_THEMES } from "@/lib/questions/child";
 import { THEMES } from "@/lib/questions/types";
 
 export const MEMOIR_GROUPINGS = ["stage", "theme", "person"] as const;
 export type MemoirGrouping = (typeof MEMOIR_GROUPINGS)[number];
 
-export const MEMOIR_TRIMS = ["a5", "trade"] as const;
-export type MemoirTrim = (typeof MEMOIR_TRIMS)[number];
+export const MEMOIR_TRIMS = ["a5", "trade", "trade-6x9"] as const;
+export type MemoirTrim = PrintTrimCode;
 
 export type MemoirSource = {
   id: string;
@@ -154,8 +155,6 @@ export function spineMillimetres(interiorPages: number) {
 }
 
 export function trimSize(trim: MemoirTrim) {
-  if (trim === "trade") {
-    return { name: "5.5 × 8.5 in", widthMm: 5.5 * 25.4, heightMm: 8.5 * 25.4 };
-  }
-  return { name: "A5", widthMm: 148, heightMm: 210 };
+  const item = trimByCode(trim);
+  return { name: item.name, widthMm: item.widthMm, heightMm: item.heightMm };
 }

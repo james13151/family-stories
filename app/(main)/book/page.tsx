@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getRequestDictionary } from "@/lib/request-locale";
 import { formatWhen } from "@/lib/locale";
+import { accountStoryWhere } from "@/lib/account";
 import { storyMemory } from "@/lib/memories";
 import { loadMemoirDraft } from "@/lib/memoir/compose";
 
@@ -14,7 +15,7 @@ export default async function BookPage() {
   if (!user) redirect("/sign-in");
   const { locale, dict } = await getRequestDictionary();
   const stories = await prisma.story.findMany({
-    where: { userId: user.id },
+    where: accountStoryWhere(user.id),
     orderBy: { createdAt: "asc" },
     include: { photos: { orderBy: { sortOrder: "asc" } } },
   });
@@ -43,6 +44,8 @@ export default async function BookPage() {
               dedication: draft.dedication,
               preface: draft.preface,
               trim: draft.trim,
+              cover: draft.cover,
+              paper: draft.paper,
               chapters: draft.structure.chapters,
               excluded: draft.structure.excluded,
             }}

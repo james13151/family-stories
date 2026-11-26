@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { SettingsForm } from "@/components/settings-form";
 import { getCurrentUser } from "@/lib/auth";
 import { getRequestDictionary } from "@/lib/request-locale";
-import { isLocale } from "@/lib/locale";
+import { fillTemplate, isLocale } from "@/lib/locale";
+import { normalizePlan } from "@/lib/billing/plans";
 import { profileFromUser } from "@/lib/profile";
 
 export default async function SettingsPage() {
@@ -10,6 +11,7 @@ export default async function SettingsPage() {
   if (!user) redirect("/sign-in");
   const { locale, dict } = await getRequestDictionary();
   const profile = profileFromUser(user);
+  const planName = normalizePlan(user.plan) === "family" ? dict.settings.planFamily : dict.settings.planGift;
   return (
     <div>
       <h1 className="text-4xl">{dict.settings.title}</h1>
@@ -28,6 +30,11 @@ export default async function SettingsPage() {
           }}
         />
       </div>
+      <section className="book-sheet mt-6 p-5 sm:p-8">
+        <h2 className="text-2xl">{dict.settings.planTitle}</h2>
+        <p className="mt-2 text-lg">{fillTemplate(dict.settings.planLine, { plan: planName })}</p>
+        <p className="mt-3 text-base leading-relaxed text-[#4d4032]">{dict.settings.planBody}</p>
+      </section>
     </div>
   );
 }

@@ -3,7 +3,7 @@ import path from "path";
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, degrees, rgb, type PDFFont, type PDFImage, type PDFPage } from "pdf-lib";
 import type { MemoirTrim } from "@/lib/memoir";
-import { spineMillimetres, trimSize } from "@/lib/memoir";
+import { coverByCode, paperByCode, spineFor, trimByCode, type PrintCoverCode, type PrintPaperCode } from "@/lib/print/catalog";
 import { htmlParagraphs } from "@/lib/memoir/text";
 
 const MM = 72 / 25.4;
@@ -31,6 +31,8 @@ export type PdfBook = {
   chapterLabel: (number: number) => string;
   language: string;
   trim: MemoirTrim;
+  cover: PrintCoverCode;
+  paper: PrintPaperCode;
   chapters: PdfChapter[];
 };
 
@@ -56,7 +58,9 @@ export async function renderMemoirPdf(book: PdfBook) {
   const ink = rgb(0.16, 0.13, 0.09);
   const muted = rgb(0.42, 0.36, 0.3);
   const rule = rgb(0.65, 0.52, 0.29);
-  const trim = trimSize(book.trim);
+  const trim = trimByCode(book.trim);
+  const paper = paperByCode(book.paper);
+  const paperFill = rgb(paper.fill[0], paper.fill[1], paper.fill[2]);
   const pageWidth = (trim.widthMm + BLEED_MM * 2) * MM;
   const pageHeight = (trim.heightMm + BLEED_MM * 2) * MM;
   const interior: PDFPage[] = [];
@@ -74,6 +78,13 @@ export async function renderMemoirPdf(book: PdfBook) {
 
   function addPage() {
     const page = doc.addPage([pageWidth, pageHeight]);
+    page.drawRectangle({
+      x: BLEED_MM * MM,
+      y: BLEED_MM * MM,
+      width: trim.widthMm * MM,
+      height: trim.heightMm * MM,
+      color: paperFill,
+    });
     interior.push(page);
     const number = interior.length;
     const box = boxFor(number);
@@ -280,7 +291,7 @@ export async function renderMemoirPdf(book: PdfBook) {
   }
 
   if (interior.length % 2 === 1) addPage();
-  const spineMm = spineMillimetres(interior.length);
+  const spineMm = spineFor(interior.length, book.paper, book.cover);
   drawCover(doc, book, latin, latinBold, cjk, trim.widthMm, trim.heightMm, spineMm);
   return doc.save();
 }
@@ -298,7 +309,9 @@ function drawCover(
   const width = (BLEED_MM + trimW + spineMm + trimW + BLEED_MM) * MM;
   const height = (BLEED_MM + trimH + BLEED_MM) * MM;
   const page = doc.insertPage(0, [width, height]);
-  const cloth = rgb(0.55, 0.23, 0.18);
+  const cover = coverByCode(book.cover);
+  const cloth = cover.code === "softcover" ? rgb(0.93, 0.89, 0.82) : rgb(0.55, 0.23, 0.18);
+  const spineInk = cover.code === "softcover" ? rgb(0.16, 0.13, 0.09) : rgb(0.98, 0.96, 0.93);
   page.drawRectangle({ x: 0, y: 0, width, height, color: rgb(0.95, 0.93, 0.88) });
   const backX = BLEED_MM * MM;
   const spineX = (BLEED_MM + trimW) * MM;
@@ -347,7 +360,7 @@ function drawCover(
   const authorFont = fontFor(book.author, false);
   const authorWidth = measure(book.author, 12, authorFont);
   draw(book.author, 12, frontCenter - authorWidth / 2, bottom + trimH * MM * 0.22, authorFont);
-  const note = `Spine ${spineMm} mm / 80 gsm text`;
+  const note = `${trimByCode(book.trim).name} / ${cover.code} / ${paperByCode(book.paper).code} / spine ${spineMm} mm`;
   draw(note, 8, backX + 18, bottom + 18, latin);
   if (spineMm >= 8 && title) {
     const spineFont = fontFor(title, false);
@@ -359,7 +372,7 @@ function drawCover(
         y: bottom + (trimH * MM) / 2 - spineWidth / 2,
         size: spineSize,
         font: spineFont,
-        color: rgb(0.98, 0.96, 0.93),
+        color: spineInk,
         rotate: degrees(90),
       });
     } catch {
