@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Booklet, type BookletStory } from "@/components/booklet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,8 +15,14 @@ import {
   type MemoirSource,
   type MemoirTrim,
 } from "@/lib/memoir";
+import type { PrintCoverCode, PrintPaperCode } from "@/lib/print/catalog";
 
 type Chapter = { id: string; title: string; storyIds: string[] };
+type Drag =
+  | { list: "chapter"; index: number; chapters: Chapter[] }
+  | { list: "story"; chapterIndex: number; index: number; ids: string[] };
+
+const selectClass = "h-12 w-full rounded-xl border border-[#e0d3bf] bg-[#fffaf3] px-3 text-lg";
 
 export function MemoirEditor({
   dict,
@@ -37,6 +43,8 @@ export function MemoirEditor({
     dedication: string;
     preface: string;
     trim: MemoirTrim;
+    cover: PrintCoverCode;
+    paper: PrintPaperCode;
     chapters: Chapter[];
     excluded: string[];
   };
@@ -48,10 +56,13 @@ export function MemoirEditor({
   const [dedication, setDedication] = useState(initial.dedication);
   const [preface, setPreface] = useState(initial.preface);
   const [trim, setTrim] = useState<MemoirTrim>(initial.trim);
+  const [cover, setCover] = useState<PrintCoverCode>(initial.cover);
+  const [paper, setPaper] = useState<PrintPaperCode>(initial.paper);
   const [chapters, setChapters] = useState<Chapter[]>(initial.chapters);
   const [excluded, setExcluded] = useState<string[]>(initial.excluded);
   const [note, setNote] = useState("");
   const [pending, setPending] = useState(false);
+  const drag = useRef<Drag | null>(null);
 
   const byId = useMemo(() => new Map(stories.map((story) => [story.id, story])), [stories]);
   const sources = useMemo<MemoirSource[]>(
@@ -70,7 +81,7 @@ export function MemoirEditor({
   const displayAuthor = authorName.trim() || author;
 
   function payload() {
-    return { title, subtitle, authorName, grouping, dedication, preface, trim, chapters, excluded };
+    return { title, subtitle, authorName, grouping, dedication, preface, trim, cover, paper, chapters, excluded };
   }
 
   async function save() {
@@ -89,16 +100,27 @@ export function MemoirEditor({
     const saved = await response.json();
     setChapters(saved.chapters);
     setExcluded(saved.excluded);
+    setCover(saved.cover);
+    setPaper(saved.paper);
+    setTrim(saved.trim);
     setNote(dict.booklet.saved);
     return true;
   }
 
-  async function download(kind: "pdf" | "epub") {
+  async function download(kind: "pdf" | "epub" | "txt" | "csv" | "zip") {
     const ok = await save();
     if (!ok) return;
     setPending(true);
     try {
-      const response = await fetch(`/api/memoir/${kind}`);
+      const path = kind === "pdf" || kind === "epub" ? `/api/memoir/${kind}` : `/api/export/${kind === "zip" ? "archive" : kind}`;
+      const filename = {
+        pdf: "hearthlight-memoir.pdf",
+        epub: "hearthlight-memoir.epub",
+        txt: "hearthlight-stories.txt",
+        csv: "hearthlight-stories.csv",
+        zip: "hearthlight-archive.zip",
+      }[kind];
+      const response = await fetch(path);
       if (!response.ok) {
         setNote(dict.errors.generic);
         return;
@@ -107,7 +129,7 @@ export function MemoirEditor({
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = kind === "pdf" ? "hearthlight-memoir.pdf" : "hearthlight-memoir.epub";
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -124,22 +146,15 @@ export function MemoirEditor({
     setExcluded(merged.excluded);
   }
 
-  function moveChapter(index: number, delta: number) {
-    const target = index + delta;
-    if (target < 0 || target >= chapters.length) return;
-    const copy = [...chapters];
-    const [item] = copy.splice(index, 1);
-    copy.splice(target, 0, item);
-    setChapters(copy);
+  function moveChapter(from: number, to: number) {
+    setChapters((current) => reorder(current, from, to));
   }
 
-  function moveStory(chapterIndex: number, storyIndex: number, delta: number) {
-    const ids = [...chapters[chapterIndex].storyIds];
-    const target = storyIndex + delta;
-    if (target < 0 || target >= ids.length) return;
-    const [id] = ids.splice(storyIndex, 1);
-    ids.splice(target, 0, id);
-    setChapters(chapters.map((chapter, index) => (index === chapterIndex ? { ...chapter, storyIds: ids } : chapter)));
+  function moveStory(chapterIndex: number, from: number, to: number) {
+    setChapters((current) => current.map((chapter, index) => {
+      if (index !== chapterIndex) return chapter;
+      return { ...chapter, storyIds: reorder(chapter.storyIds, from, to) };
+    }));
   }
 
   function leaveOut(id: string) {
@@ -162,6 +177,35 @@ export function MemoirEditor({
     });
   }
 
+  function startDrag(event: React.PointerEvent<HTMLButtonElement>, next: Drag) {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    drag.current = next;
+  }
+
+  function moveDrag(event: React.PointerEvent<HTMLButtonElement>) {
+    const current = drag.current;
+    if (!current) return;
+    const hit = document.elementFromPoint(event.clientX, event.clientY)?.closest("[data-drag-list]");
+    if (!hit) return;
+    const list = hit.getAttribute("data-drag-list");
+    const index = Number(hit.getAttribute("data-drag-index"));
+    if (!Number.isInteger(index)) return;
+    if (current.list === "chapter" && list === "chapter" && index !== current.index) {
+      const chaptersNext = reorder(current.chapters, current.index, index);
+      current.chapters = chaptersNext;
+      current.index = index;
+      setChapters(chaptersNext);
+    }
+    if (current.list === "story" && list === "story" && Number(hit.getAttribute("data-chapter-index")) === current.chapterIndex && index !== current.index) {
+      const ids = reorder(current.ids, current.index, index);
+      const chapterIndex = current.chapterIndex;
+      current.ids = ids;
+      current.index = index;
+      setChapters((existing) => existing.map((chapter, position) => position === chapterIndex ? { ...chapter, storyIds: ids } : chapter));
+    }
+  }
+
   return (
     <div>
       <form
@@ -175,13 +219,20 @@ export function MemoirEditor({
           <Field label={dict.booklet.bookTitle} value={title} onChange={setTitle} placeholder={dict.booklet.coverTitle} maxLength={120} />
           <Field label={dict.booklet.bookSubtitle} value={subtitle} onChange={setSubtitle} placeholder={dict.booklet.coverSubtitle} maxLength={180} />
           <Field label={dict.booklet.authorName} value={authorName} onChange={setAuthorName} placeholder={author} maxLength={80} />
-          <div className="space-y-2">
-            <Label htmlFor="memoir-trim">{dict.booklet.trim}</Label>
-            <select id="memoir-trim" className="h-12 w-full rounded-xl border border-[#e0d3bf] bg-[#fffaf3] px-3 text-lg" value={trim} onChange={(event) => setTrim(event.target.value as MemoirTrim)}>
-              <option value="a5">{dict.booklet.trimA5}</option>
-              <option value="trade">{dict.booklet.trimTrade}</option>
-            </select>
-          </div>
+          <Choice id="memoir-trim" label={dict.booklet.trim} value={trim} onChange={(value) => setTrim(value as MemoirTrim)} options={[
+            ["a5", dict.booklet.trimA5],
+            ["trade", dict.booklet.trimTrade],
+            ["trade-6x9", dict.booklet.trimSixNine],
+          ]} />
+          <Choice id="memoir-cover" label={dict.booklet.cover} value={cover} onChange={(value) => setCover(value as PrintCoverCode)} options={[
+            ["hardcover", dict.booklet.coverHardcover],
+            ["softcover", dict.booklet.coverSoftcover],
+          ]} />
+          <Choice id="memoir-paper" label={dict.booklet.paper} value={paper} onChange={(value) => setPaper(value as PrintPaperCode)} options={[
+            ["uncoated", dict.booklet.paperUncoated],
+            ["ivory", dict.booklet.paperIvory],
+            ["coated", dict.booklet.paperCoated],
+          ]} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="memoir-dedication">{dict.booklet.dedication}</Label>
@@ -204,8 +255,18 @@ export function MemoirEditor({
         </div>
         <ol className="space-y-4">
           {chapters.map((chapter, chapterIndex) => (
-            <li key={chapter.id} className="rounded-2xl border border-[#e0d3bf] p-4">
+            <li key={chapter.id} data-drag-list="chapter" data-drag-index={chapterIndex} className="rounded-2xl border border-[#e0d3bf] bg-[#fffaf3] p-4">
               <div className="flex flex-wrap items-end gap-2">
+                <button
+                  type="button"
+                  className="book-grip mb-1 flex h-12 w-12 items-center justify-center rounded-xl border border-[#e0d3bf] text-xl text-[#6d5e4c]"
+                  aria-label={dict.booklet.drag}
+                  onPointerDown={(event) => startDrag(event, { list: "chapter", index: chapterIndex, chapters })}
+                  onPointerMove={moveDrag}
+                  onPointerUp={() => { drag.current = null; }}
+                >
+                  ⋮⋮
+                </button>
                 <div className="min-w-48 flex-1 space-y-2">
                   <Label htmlFor={`chapter-${chapter.id}`}>{dict.booklet.chapterTitle}</Label>
                   <Input id={`chapter-${chapter.id}`} value={chapter.title} maxLength={120} className="h-12 text-lg" onChange={(event) => {
@@ -213,18 +274,28 @@ export function MemoirEditor({
                     setChapters((current) => current.map((item, index) => index === chapterIndex ? { ...item, title: value } : item));
                   }} />
                 </div>
-                <Button type="button" variant="outline" className="h-12" onClick={() => moveChapter(chapterIndex, -1)} disabled={chapterIndex === 0}>{dict.booklet.moveUp}</Button>
-                <Button type="button" variant="outline" className="h-12" onClick={() => moveChapter(chapterIndex, 1)} disabled={chapterIndex === chapters.length - 1}>{dict.booklet.moveDown}</Button>
+                <Button type="button" variant="outline" className="h-12" onClick={() => moveChapter(chapterIndex, chapterIndex - 1)} disabled={chapterIndex === 0}>{dict.booklet.moveUp}</Button>
+                <Button type="button" variant="outline" className="h-12" onClick={() => moveChapter(chapterIndex, chapterIndex + 1)} disabled={chapterIndex === chapters.length - 1}>{dict.booklet.moveDown}</Button>
               </div>
               <ol className="mt-3 space-y-2">
                 {chapter.storyIds.map((id, storyIndex) => {
                   const story = byId.get(id);
                   if (!story) return null;
                   return (
-                    <li key={id} className="flex flex-wrap items-center gap-2">
+                    <li key={id} data-drag-list="story" data-drag-index={storyIndex} data-chapter-index={chapterIndex} className="flex flex-wrap items-center gap-2 rounded-xl bg-[#f7f1e7] px-2 py-2">
+                      <button
+                        type="button"
+                        className="book-grip flex h-11 w-11 items-center justify-center rounded-lg text-lg text-[#6d5e4c]"
+                        aria-label={dict.booklet.drag}
+                        onPointerDown={(event) => startDrag(event, { list: "story", chapterIndex, index: storyIndex, ids: chapter.storyIds })}
+                        onPointerMove={moveDrag}
+                        onPointerUp={() => { drag.current = null; }}
+                      >
+                        ⋮⋮
+                      </button>
                       <span className="min-w-40 flex-1 text-lg">{story.title || story.question}</span>
-                      <Button type="button" variant="outline" className="h-11" onClick={() => moveStory(chapterIndex, storyIndex, -1)} disabled={storyIndex === 0}>{dict.booklet.moveUp}</Button>
-                      <Button type="button" variant="outline" className="h-11" onClick={() => moveStory(chapterIndex, storyIndex, 1)} disabled={storyIndex === chapter.storyIds.length - 1}>{dict.booklet.moveDown}</Button>
+                      <Button type="button" variant="outline" className="h-11" onClick={() => moveStory(chapterIndex, storyIndex, storyIndex - 1)} disabled={storyIndex === 0}>{dict.booklet.moveUp}</Button>
+                      <Button type="button" variant="outline" className="h-11" onClick={() => moveStory(chapterIndex, storyIndex, storyIndex + 1)} disabled={storyIndex === chapter.storyIds.length - 1}>{dict.booklet.moveDown}</Button>
                       <Button type="button" variant="outline" className="h-11" onClick={() => leaveOut(id)}>{dict.booklet.leaveOut}</Button>
                     </li>
                   );
@@ -254,11 +325,16 @@ export function MemoirEditor({
           <Button type="submit" className="h-12 px-5" disabled={pending}>{dict.booklet.save}</Button>
           <Button type="button" variant="outline" className="h-12 px-5" disabled={pending} onClick={() => void download("pdf")}>{dict.booklet.downloadPdf}</Button>
           <Button type="button" variant="outline" className="h-12 px-5" disabled={pending} onClick={() => void download("epub")}>{dict.booklet.downloadEpub}</Button>
+          <Button type="button" variant="outline" className="h-12 px-5" disabled={pending} onClick={() => void download("txt")}>{dict.booklet.downloadTxt}</Button>
+          <Button type="button" variant="outline" className="h-12 px-5" disabled={pending} onClick={() => void download("csv")}>{dict.booklet.downloadCsv}</Button>
+          <Button type="button" variant="outline" className="h-12 px-5" disabled={pending} onClick={() => void download("zip")}>{dict.booklet.downloadZip}</Button>
         </div>
         {note ? <p className="text-lg text-[#4d4032]">{note}</p> : null}
         <p className="text-base leading-relaxed text-[#4d4032]">{dict.booklet.printerNote}</p>
+        <p className="text-base leading-relaxed text-[#4d4032]">{dict.booklet.exportsNote}</p>
       </form>
-      <div className="mt-8">
+      <div className="book-preview mt-8">
+        <h2 className="no-print mb-4 px-2 text-2xl">{dict.booklet.preview}</h2>
         <Booklet
           dict={dict}
           author={author}
@@ -271,12 +347,31 @@ export function MemoirEditor({
   );
 }
 
+function reorder<T>(list: T[], from: number, to: number) {
+  if (from === to || from < 0 || to < 0 || from >= list.length || to >= list.length) return list;
+  const copy = [...list];
+  const [item] = copy.splice(from, 1);
+  copy.splice(to, 0, item);
+  return copy;
+}
+
 function Field({ label, value, onChange, placeholder, maxLength }: { label: string; value: string; onChange: (value: string) => void; placeholder: string; maxLength: number }) {
   const id = `memoir-${label.replace(/\s+/g, "-").toLowerCase()}`;
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
       <Input id={id} value={value} placeholder={placeholder} maxLength={maxLength} className="h-12 text-lg" onChange={(event) => onChange(event.target.value)} />
+    </div>
+  );
+}
+
+function Choice({ id, label, value, onChange, options }: { id: string; label: string; value: string; onChange: (value: string) => void; options: [string, string][] }) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      <select id={id} className={selectClass} value={value} onChange={(event) => onChange(event.target.value)}>
+        {options.map(([option, name]) => <option key={option} value={option}>{name}</option>)}
+      </select>
     </div>
   );
 }
