@@ -12,7 +12,7 @@ The product owner is in Hong Kong. People using it may be in Hong Kong, mainland
 - Suggested questions use that profile. A question can name a place or a person they mentioned. Skipped topics stay hidden until they ask to see them. They still choose the question. Nothing is assigned as the only prompt.
 - Keep a memory for a child. Answer a prompt about their life — first steps, a birthday, school, a family outing — or start a blank page. Those memories can be browsed by theme, by the child's years, and by place, in the same way as the life questions.
 - Print one story as its own booklet, or tick a few in the story log and print that small set. Each booklet has a title page, the words, and the photographs, so a single piece can be shared on its own.
-- Open the family memoir when the whole collection should read as one book: a title page, a table of contents, and chapters by time of life, by theme, or by person (your own stories, and a chapter for each child). Print either one from the browser, or save a PDF. No outside print service is used.
+- Open the family memoir when the whole collection should read as one book. Edit the title, subtitle, author, dedication, preface, chapter titles, and the order of chapters and stories, and leave a story out. Drag a chapter or a story to reorder it. The preview updates as you edit. Print from the browser, or download a print-shop PDF. The print catalog is A5 (the default), 5.5 × 8.5 in, or 6 × 9 in, with hardcover or softcover and a paper choice. Download an EPUB, a UTF-8 TXT, a UTF-8 CSV, or a zip of the words plus photographs and recordings. A booklet of one story or a small set is still separate. See `docs/memoir-print.md`.
 - Set the invitation pace: every day (and how many questions that day), weekly, twice a week, monthly, or every N days. A due question is shown on the home page. They can switch it for another suggestion. They can still write on any day. On the Android app, a local reminder can fire when the next invitation is due. The website itself can only remind someone while that page stays open.
 - Write in a book-like page. Change the font (book serif or clear sans), size, alignment, spacing, first-line indent, and a large first letter. Bold, italic, and underline are there for a phrase.
 - Record speech in the browser. The audio file is saved on the account. A pluggable transcriber turns it into text they can edit. The default transcriber is Whisper running on this server, not the Chrome / Google speech service. Traditional Chinese transcripts are converted with OpenCC toward Hong Kong usage after recognition.
@@ -100,7 +100,7 @@ The life bank is `lib/questions/bank.ts`: about 300 questions, each written in E
 
 On the question page the bank can be browsed three ways, in all three languages. By theme, questions are grouped and can sit in more than one category: childhood, family, school, career (the old “work” label), self-development, marriage, children, food, traditions, migration, later life, and the rest of the themes. By time, each question has a life stage and the groups run from family beginnings through childhood, school, coming of age, career, marriage, and children, then later life, with a last group for memories that run across a life. By place, only the questions about a place are shown, gathered as hometown, home, a city or region, moving, or travel. Nothing in that grouping is a private address. Suggested questions still sit above the groups.
 
-`/children` is the parents' shelf. Its prompts are a smaller bank about a child, with the same three ways of browsing. A blank page needs the child's name plus a theme, a time of life, and a place, and it is stored as a story with no question. `/book` compiles every story into a memoir: title page, contents, chapter openings, then the stories and their photographs. Chapters can follow time of life, theme, or person.
+`/children` is the parents' shelf. Its prompts are a smaller bank about a child, with the same three ways of browsing. A blank page needs the child's name plus a theme, a time of life, and a place, and it is stored as a story with no question. `/book` compiles the memoir and keeps the book's own edits on the account: title, front matter, chapter grouping, order, and which stories are included. Chapters and stories can be dragged. The preview follows the edits. The browser can still print that preview. Download print-ready PDF uses the print catalog (A5, 5.5 × 8.5 in, or 6 × 9 in; hardcover or softcover; uncoated, ivory, or coated paper) with bleed, crop marks, embedded fonts, and a cover spread. Download EPUB makes the same book for an e-reader. TXT and CSV export the stories as UTF-8, and the zip adds the photographs and recordings with a manifest and no public links. The print notes are in `docs/memoir-print.md`.
 
 A few questions contain placeholders such as `{childhoodPlace}` or `{person}`. If that part of the profile is empty, the fallback sentence is used. `lib/questions/personalize.ts` hides a question whose main theme was opted out of, and lifts questions that match what they said they enjoy, their place in the family, and any detail that can be filled in.
 
@@ -153,6 +153,7 @@ Copy `.env.example` to `.env`.
 | `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | S3-compatible object storage. |
 | `S3_FORCE_PATH_STYLE` | `false` for Aliyun OSS and Tencent COS virtual-host addresses. `true` for some MinIO setups. |
 | `STT_PROVIDER`, `STT_MODEL`, `STT_HTTP_URL`, `STT_HTTP_FORMAT`, `STT_HTTP_KEY`, `HF_ENDPOINT` | Speech, described above. |
+| `STRIPE_BILLING_ENABLED`, `STRIPE_SECRET_KEY`, `STRIPE_PRICE_FAMILY` | Leave unset. Billing is off. See `docs/billing.md`. |
 
 Local files:
 
@@ -162,7 +163,7 @@ Local files:
 
 Back up the database file and the upload directory together. A story row without its audio object is an incomplete story.
 
-The schema uses plain strings and dates, so it can move to PostgreSQL. Change the datasource provider to `postgresql`, set `DATABASE_URL` to Aliyun RDS or TencentDB, and run `npx prisma db push`. Do that before real traffic if more than one app process will write at once. SQLite is appropriate for local development and for a single Node process serving one family.
+The schema uses plain strings and dates. SQLite remains the database for this single-server deploy. Postgres and S3-compatible object storage are described in `docs/scale.md` and are not switched on here. Plans are in `docs/billing.md`: the gift plan is the default and is not billed. A family plan and a print checkout can be connected later. Stripe is not called, and mainland China payments would need Alipay or WeChat.
 
 ## Deployment
 
