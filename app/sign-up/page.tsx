@@ -7,7 +7,7 @@ export default async function SignUpPage() {
   const { locale, dict } = await getRequestDictionary();
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
-      <div className="mb-6 flex items-center justify-between gap-3">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-[#8d3b2e]">
           <Lantern />
           <Wordmark locale={locale} />
