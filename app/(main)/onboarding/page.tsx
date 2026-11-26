@@ -26,6 +26,7 @@ export default async function OnboardingPage() {
         skipTopics: profile.skipTopics,
         frequency: user.frequency || "weekly",
         customIntervalDays: user.customIntervalDays || 14,
+        promptsPerDay: user.promptsPerDay || 1,
       }}
     />
   );

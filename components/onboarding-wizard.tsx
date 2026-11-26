@@ -24,6 +24,7 @@ type Draft = {
   skipTopics: string[];
   frequency: string;
   customIntervalDays: number;
+  promptsPerDay: number;
 };
 
 export function OnboardingWizard({
@@ -208,6 +209,7 @@ export function OnboardingWizard({
           <h1 className="text-3xl">{dict.onboarding.freqTitle}</h1>
           <p className="text-[#6d5e4c]">{dict.onboarding.freqBody}</p>
           {[
+            ["daily", dict.frequency.daily, dict.frequency.dailyHelp],
             ["weekly", dict.frequency.weekly, dict.frequency.weeklyHelp],
             ["twice_weekly", dict.frequency.twice, dict.frequency.twiceHelp],
             ["monthly", dict.frequency.monthly, dict.frequency.monthlyHelp],
@@ -218,6 +220,12 @@ export function OnboardingWizard({
               <span className="text-sm text-[#6d5e4c]">{help}</span>
             </button>
           ))}
+          {draft.frequency === "daily" ? (
+            <label className="block text-base">
+              {dict.frequency.perDay}
+              <Input className={`${fieldClass} mt-2`} type="number" min={1} max={5} value={draft.promptsPerDay} onChange={(event) => setDraft({ ...draft, promptsPerDay: Number(event.target.value) })} />
+            </label>
+          ) : null}
           {draft.frequency === "custom" ? (
             <label className="block text-base">
               {fillTemplate(dict.frequency.every, { count: draft.customIntervalDays })}

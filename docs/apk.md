@@ -135,6 +135,16 @@ The signed APK is `android/app/build/outputs/apk/release/app-release.apk` when t
 
 Keep the `.jks` file and the passwords somewhere you can open in a few years. Losing them means the next build cannot update the installed app. The family would have to uninstall first.
 
+## Reminders
+
+A due question is shown on the home page as soon as the site opens. That does not need a new APK.
+
+The Android app can also raise a local notification at the next due time. It is scheduled on the phone by the app itself. It does not use Firebase, Google push, or a marketing service, so it does not depend on Play Services. The person turns it on with “Remind me on this device” on the home page. Android 13 and newer will ask for notification permission then.
+
+The APK that was sideloaded before this change does not include that notification code. After this lands, rebuild with the live `CAPACITOR_SERVER_URL` and install the new APK. If Android refuses because the signature differs, uninstall 家燈 first. A release-signed APK will not update a debug APK in place.
+
+A browser tab cannot be relied on for the same reminder. Chrome, and many browsers used in mainland China, drop a scheduled notification when the page is closed. There is no background push for the website. Opening the site still shows the question on the home page.
+
 ## After the domain exists
 
 1. Point the domain at the Hong Kong host and serve the Next.js app over HTTPS.

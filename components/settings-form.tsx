@@ -32,6 +32,7 @@ export function SettingsForm({
     skipTopics: string[];
     frequency: string;
     customIntervalDays: number;
+    promptsPerDay: number;
   };
 }) {
   const [draft, setDraft] = useState(initial);
@@ -108,6 +109,7 @@ export function SettingsForm({
         <h2 className="text-2xl">{dict.settings.frequency}</h2>
         <p className="text-[#6d5e4c]">{dict.settings.frequencyHelp}</p>
         {[
+          ["daily", dict.frequency.daily, dict.frequency.dailyHelp],
           ["weekly", dict.frequency.weekly, dict.frequency.weeklyHelp],
           ["twice_weekly", dict.frequency.twice, dict.frequency.twiceHelp],
           ["monthly", dict.frequency.monthly, dict.frequency.monthlyHelp],
@@ -118,6 +120,12 @@ export function SettingsForm({
             <span className="text-sm text-[#6d5e4c]">{help}</span>
           </button>
         ))}
+        {draft.frequency === "daily" ? (
+          <label className="block text-base">
+            {dict.frequency.perDay}
+            <Input className={`${fieldClass} mt-2`} type="number" min={1} max={5} value={draft.promptsPerDay} aria-label={dict.frequency.perDay} onChange={(event) => setDraft({ ...draft, promptsPerDay: Number(event.target.value) })} />
+          </label>
+        ) : null}
         {draft.frequency === "custom" ? (
           <Input className={fieldClass} type="number" min={1} max={365} value={draft.customIntervalDays} aria-label={fillTemplate(dict.frequency.every, { count: draft.customIntervalDays })} onChange={(event) => setDraft({ ...draft, customIntervalDays: Number(event.target.value) })} />
         ) : null}

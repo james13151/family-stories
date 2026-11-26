@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { defaultFormat } from "@/lib/format";
-import { computeNextPrompt, isPromptDue } from "@/lib/frequency";
+import { consumeDueSlot, isPromptDue } from "@/lib/frequency";
 import { fillTemplate, isLocale } from "@/lib/locale";
 import { getDictionary } from "@/lib/i18n";
 import { profileFromUser } from "@/lib/profile";
@@ -92,10 +92,17 @@ export async function POST(request: Request) {
     },
   });
   if (due) {
-    const next = computeNextPrompt(new Date(), user.frequency, user.customIntervalDays, user.cycleIndex);
+    const next = consumeDueSlot({
+      nextPromptAt: user.nextPromptAt,
+      promptsLeft: user.promptsLeft,
+      frequency: user.frequency,
+      promptsPerDay: user.promptsPerDay,
+      customDays: user.customIntervalDays,
+      cycle: user.cycleIndex,
+    });
     await prisma.user.update({
       where: { id: user.id },
-      data: { nextPromptAt: next.date, cycleIndex: next.cycle },
+      data: { nextPromptAt: next.nextPromptAt, promptsLeft: next.promptsLeft, cycleIndex: next.cycleIndex },
     });
   }
   return NextResponse.json({ id: story.id });
