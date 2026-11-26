@@ -3,6 +3,7 @@ import { accountStoryWhere, assertOneAccount } from "../lib/account";
 import { billingStatus, familyCheckoutRequest, planAllows } from "../lib/billing/plans";
 import { buildArchive, buildStoryCsv, buildStoryTxt, fileSlug } from "../lib/export/stories";
 import { preparePrintCheckout, PRINT_COVERS, PRINT_PAPERS, PRINT_TRIMS } from "../lib/print/catalog";
+import { storyLayout } from "../lib/memoir/design";
 import { databaseKind, storageKind } from "../lib/runtime";
 
 const errors: string[] = [];
@@ -41,6 +42,12 @@ delete process.env.STRIPE_SECRET_KEY;
 delete process.env.STRIPE_PRICE_FAMILY;
 if (billingStatus().enabled) errors.push("billing stayed enabled after the test");
 
+if (storyLayout("classic", false, false) !== "classic") errors.push("a plain story should stay classic");
+if (storyLayout("classic", true, false) !== "photo") errors.push("a photographed story should use the photo page");
+if (storyLayout("spread", true, false) !== "spread") errors.push("a photographed story should open as a spread");
+if (storyLayout("spread", false, true) !== "spread") errors.push("a chapter opening should use the spread");
+if (storyLayout("spread", false, false) !== "classic") errors.push("a later story without a photo should stay classic");
+if (storyLayout("photo", false, false) !== "photo") errors.push("the photo template should keep its page");
 if (databaseKind("file:../data/hearthlight.db") !== "sqlite") errors.push("sqlite url not recognized");
 if (databaseKind("postgresql://localhost/hearthlight") !== "postgres") errors.push("postgres url not recognized");
 if (storageKind("local").driver !== "local" || storageKind("s3").driver !== "s3") errors.push("storage driver not recognized");

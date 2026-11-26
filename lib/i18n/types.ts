@@ -410,6 +410,16 @@ export type Dictionary = {
     cover: string;
     coverHardcover: string;
     coverSoftcover: string;
+    styleLabel: string;
+    templateLabel: string;
+    styleSeal: string;
+    styleCloth: string;
+    styleLane: string;
+    templateClassic: string;
+    templatePhoto: string;
+    templateSpread: string;
+    fallbackTitle: string;
+    fallbackSubtitle: string;
     paper: string;
     paperUncoated: string;
     paperIvory: string;

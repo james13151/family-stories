@@ -1,5 +1,9 @@
 # Memoir print file and EPUB
 
+The editor preview is a book, not the web page. Three cover styles can be hardcover or softcover: 家印 The Seal, 布面燙金 Cloth & Foil, and 巷曉 Morning Lane. Morning Lane uses the photograph bundled at `public/covers/morning-lane.jpg`. A hardcover preview shows board edges and a wider spine. A softcover preview is a thinner book. The cover title is the title saved on the memoir, or 我們的故事 / Our Stories when that field is empty.
+
+Story pages follow the chosen template. Classic typeset is a running head, the question, the title, the teller, date, and place, then a justified indented page. Photo story puts a photograph on the upper half. Photo spread is a full-bleed photograph facing a classic page, used for a chapter opening and for a story that has a photograph. A story with no photograph uses the bundled lane picture when the template needs one. The preview updates as the fields change, before the next download. The print PDF cover uses the same style. Its interior stays the print typeset, with the story photographs embedded.
+
 `/book` is the family memoir. The title, subtitle, author or family name, dedication, preface, chapter grouping, chapter titles, chapter order, story order, and which stories are included are saved on the account. Individual stories are still edited on their own pages. A booklet of one story, or of a small set, is still a separate print.
 
 The browser print button remains for reading on screen or saving a quick PDF. The file to hand to a printer is **Download print-ready PDF**. **Download EPUB** is the same book for an e-reader.

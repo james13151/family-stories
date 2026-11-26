@@ -52,6 +52,8 @@ model Memoir {
   trim          String   @default("a5")
   cover         String   @default("hardcover")
   paper         String   @default("uncoated")
+  coverStyle    String   @default("seal")
+  storyTemplate String   @default("classic")
   structureJson String   @default("{}")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

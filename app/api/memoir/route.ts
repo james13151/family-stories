@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { getRequestDictionary } from "@/lib/request-locale";
 import { isMemoirGrouping, isMemoirTrim, type MemoirStructure } from "@/lib/memoir";
+import { isCoverStyle, isStoryTemplate } from "@/lib/memoir/design";
 import { isPrintCover, isPrintPaper } from "@/lib/print/catalog";
 import { saveMemoirDraft } from "@/lib/memoir/compose";
 
@@ -16,6 +17,8 @@ const schema = z.object({
   trim: z.string(),
   cover: z.string(),
   paper: z.string(),
+  coverStyle: z.string(),
+  storyTemplate: z.string(),
   chapters: z.array(z.object({
     id: z.string().min(1).max(80),
     title: z.string().max(120),
@@ -30,7 +33,7 @@ export async function PUT(request: Request) {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "invalid" }, { status: 400 });
   const data = parsed.data;
-  if (!isMemoirGrouping(data.grouping) || !isMemoirTrim(data.trim) || !isPrintCover(data.cover) || !isPrintPaper(data.paper)) {
+  if (!isMemoirGrouping(data.grouping) || !isMemoirTrim(data.trim) || !isPrintCover(data.cover) || !isPrintPaper(data.paper) || !isCoverStyle(data.coverStyle) || !isStoryTemplate(data.storyTemplate)) {
     return NextResponse.json({ error: "invalid" }, { status: 400 });
   }
   const { dict } = await getRequestDictionary();
@@ -49,6 +52,8 @@ export async function PUT(request: Request) {
     trim: data.trim,
     cover: data.cover,
     paper: data.paper,
+    coverStyle: data.coverStyle,
+    storyTemplate: data.storyTemplate,
     structure,
   });
   return NextResponse.json({
@@ -61,6 +66,8 @@ export async function PUT(request: Request) {
     trim: saved.trim,
     cover: saved.cover,
     paper: saved.paper,
+    coverStyle: saved.coverStyle,
+    storyTemplate: saved.storyTemplate,
     chapters: saved.structure.chapters,
     excluded: saved.structure.excluded,
   });

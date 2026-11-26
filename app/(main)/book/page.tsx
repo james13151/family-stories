@@ -35,7 +35,6 @@ export default async function BookPage() {
           <MemoirEditor
             dict={dict}
             author={user.name}
-            compiled={formatWhen(new Date(), locale)}
             initial={{
               title: draft.title,
               subtitle: draft.subtitle,
@@ -46,6 +45,8 @@ export default async function BookPage() {
               trim: draft.trim,
               cover: draft.cover,
               paper: draft.paper,
+              coverStyle: draft.coverStyle,
+              storyTemplate: draft.storyTemplate,
               chapters: draft.structure.chapters,
               excluded: draft.structure.excluded,
             }}

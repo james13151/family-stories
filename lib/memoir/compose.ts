@@ -13,6 +13,7 @@ import {
   type MemoirStructure,
   type MemoirTrim,
 } from "@/lib/memoir";
+import { isCoverStyle, isStoryTemplate, type CoverStyle, type StoryTemplate } from "@/lib/memoir/design";
 import { isPrintCover, isPrintPaper, type PrintCoverCode, type PrintPaperCode } from "@/lib/print/catalog";
 import { memoirChapterTitle } from "@/lib/memoir/labels";
 import type { PdfBook } from "@/lib/memoir/render-pdf";
@@ -28,6 +29,8 @@ export type MemoirDraft = {
   trim: MemoirTrim;
   cover: PrintCoverCode;
   paper: PrintPaperCode;
+  coverStyle: CoverStyle;
+  storyTemplate: StoryTemplate;
   structure: MemoirStructure;
 };
 
@@ -53,6 +56,8 @@ export async function loadMemoirDraft(userId: string, author: string, dict: Dict
     trim: memoir && isMemoirTrim(memoir.trim) ? memoir.trim : "a5",
     cover: memoir && isPrintCover(memoir.cover) ? memoir.cover : "hardcover",
     paper: memoir && isPrintPaper(memoir.paper) ? memoir.paper : "uncoated",
+    coverStyle: memoir && isCoverStyle(memoir.coverStyle) ? memoir.coverStyle : "seal",
+    storyTemplate: memoir && isStoryTemplate(memoir.storyTemplate) ? memoir.storyTemplate : "classic",
     structure,
   };
 }
@@ -71,6 +76,8 @@ export async function saveMemoirDraft(userId: string, author: string, dict: Dict
     trim: draft.trim,
     cover: draft.cover,
     paper: draft.paper,
+    coverStyle: draft.coverStyle,
+    storyTemplate: draft.storyTemplate,
     structureJson: JSON.stringify(structure),
   };
   await prisma.memoir.upsert({
@@ -126,6 +133,7 @@ export async function composeMemoirPdf(userId: string, author: string, dict: Dic
     trim: draft.trim,
     cover: draft.cover,
     paper: draft.paper,
+    coverStyle: draft.coverStyle,
     chapters,
   };
 }

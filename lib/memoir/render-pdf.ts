@@ -3,6 +3,7 @@ import path from "path";
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, degrees, rgb, type PDFFont, type PDFImage, type PDFPage } from "pdf-lib";
 import type { MemoirTrim } from "@/lib/memoir";
+import type { CoverStyle } from "@/lib/memoir/design";
 import { coverByCode, paperByCode, spineFor, trimByCode, type PrintCoverCode, type PrintPaperCode } from "@/lib/print/catalog";
 import { htmlParagraphs } from "@/lib/memoir/text";
 
@@ -33,6 +34,7 @@ export type PdfBook = {
   trim: MemoirTrim;
   cover: PrintCoverCode;
   paper: PrintPaperCode;
+  coverStyle: CoverStyle;
   chapters: PdfChapter[];
 };
 
@@ -292,7 +294,13 @@ export async function renderMemoirPdf(book: PdfBook) {
 
   if (interior.length % 2 === 1) addPage();
   const spineMm = spineFor(interior.length, book.paper, book.cover);
-  drawCover(doc, book, latin, latinBold, cjk, trim.widthMm, trim.heightMm, spineMm);
+  let lane: PDFImage | null = null;
+  try {
+    lane = await doc.embedJpg(fs.readFileSync(path.join(process.cwd(), "public/covers/morning-lane.jpg")));
+  } catch {
+    lane = null;
+  }
+  drawCover(doc, book, latin, latinBold, cjk, trim.widthMm, trim.heightMm, spineMm, lane);
   return doc.save();
 }
 
@@ -305,13 +313,16 @@ function drawCover(
   trimW: number,
   trimH: number,
   spineMm: number,
+  lane: PDFImage | null,
 ) {
   const width = (BLEED_MM + trimW + spineMm + trimW + BLEED_MM) * MM;
   const height = (BLEED_MM + trimH + BLEED_MM) * MM;
   const page = doc.insertPage(0, [width, height]);
   const cover = coverByCode(book.cover);
-  const cloth = cover.code === "softcover" ? rgb(0.93, 0.89, 0.82) : rgb(0.55, 0.23, 0.18);
-  const spineInk = cover.code === "softcover" ? rgb(0.16, 0.13, 0.09) : rgb(0.98, 0.96, 0.93);
+  const style = book.coverStyle || "seal";
+  const styleCloth = style === "cloth" ? rgb(0.306, 0.141, 0.122) : style === "lane" ? rgb(0.165, 0.129, 0.11) : rgb(0.478, 0.231, 0.18);
+  const cloth = cover.code === "softcover" ? rgb(0.62, 0.48, 0.42) : styleCloth;
+  const spineInk = cover.code === "softcover" ? rgb(0.98, 0.96, 0.93) : rgb(0.97, 0.93, 0.86);
   page.drawRectangle({ x: 0, y: 0, width, height, color: rgb(0.95, 0.93, 0.88) });
   const backX = BLEED_MM * MM;
   const spineX = (BLEED_MM + trimW) * MM;
@@ -343,7 +354,38 @@ function drawCover(
       }
     }
   };
-  const frontCenter = frontX + (trimW * MM) / 2;
+  const frontW = trimW * MM;
+  const frontH = trimH * MM;
+  const gold = rgb(0.91, 0.835, 0.639);
+  const cream = rgb(0.957, 0.929, 0.886);
+  const face = style === "seal" ? ink : gold;
+  if (style === "lane" && lane) {
+    page.drawImage(lane, { x: frontX, y: bottom, width: frontW, height: frontH });
+    page.drawRectangle({ x: frontX, y: bottom, width: frontW, height: frontH * 0.42, color: rgb(0.09, 0.06, 0.05), opacity: 0.72 });
+  } else if (style === "cloth") {
+    page.drawRectangle({ x: frontX, y: bottom, width: frontW, height: frontH, color: rgb(0.306, 0.141, 0.122) });
+  } else {
+    page.drawRectangle({ x: frontX, y: bottom, width: frontW, height: frontH, color: cream });
+    page.drawRectangle({ x: frontX + 14, y: bottom + 14, width: frontW - 28, height: frontH - 28, borderColor: rgb(0.478, 0.231, 0.18), borderWidth: 1.4 });
+    page.drawRectangle({ x: frontX + 20, y: bottom + 20, width: frontW - 40, height: frontH - 40, borderColor: rgb(0.769, 0.647, 0.455), borderWidth: 0.8 });
+  }
+  if (style !== "lane") {
+    const sealX = frontX + frontW / 2;
+    const sealY = bottom + frontH * 0.78;
+    page.drawCircle({
+      x: sealX,
+      y: sealY,
+      size: 16,
+      color: style === "seal" ? rgb(0.478, 0.231, 0.18) : rgb(0.306, 0.141, 0.122),
+      borderColor: gold,
+      borderWidth: style === "cloth" ? 1 : 0,
+    });
+    draw("家", 14, sealX - 7, sealY - 5, cjk, style === "seal" ? cream : gold);
+  }
+  const mark = "HEARTHLIGHT";
+  const markWidth = measure(mark, 8, latin);
+  draw(mark, 8, frontX + (frontW - markWidth) / 2, bottom + frontH * (style === "lane" ? 0.34 : 0.7), latin, style === "seal" ? rgb(0.247, 0.361, 0.31) : gold);
+  const frontCenter = frontX + frontW / 2;
   const title = book.title || "";
   const titleFont = fontFor(title, true);
   let titleSize = 22;
@@ -353,13 +395,13 @@ function drawCover(
     titleSize -= 1;
     titleWidth = measure(title, titleSize, titleFont);
   }
-  draw(title, titleSize, frontCenter - titleWidth / 2, bottom + trimH * MM * 0.62, titleFont);
+  draw(title, titleSize, frontCenter - titleWidth / 2, bottom + frontH * (style === "lane" ? 0.24 : 0.56), titleFont, face);
   const subtitleFont = fontFor(book.subtitle, false);
   const subtitleWidth = measure(book.subtitle, 12, subtitleFont);
-  draw(book.subtitle, 12, frontCenter - subtitleWidth / 2, bottom + trimH * MM * 0.54, subtitleFont);
+  draw(book.subtitle, 12, frontCenter - subtitleWidth / 2, bottom + frontH * (style === "lane" ? 0.18 : 0.48), subtitleFont, face);
   const authorFont = fontFor(book.author, false);
   const authorWidth = measure(book.author, 12, authorFont);
-  draw(book.author, 12, frontCenter - authorWidth / 2, bottom + trimH * MM * 0.22, authorFont);
+  draw(book.author, 12, frontCenter - authorWidth / 2, bottom + frontH * 0.12, authorFont, face);
   const note = `${trimByCode(book.trim).name} / ${cover.code} / ${paperByCode(book.paper).code} / spine ${spineMm} mm`;
   draw(note, 8, backX + 18, bottom + 18, latin);
   if (spineMm >= 8 && title) {

@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { Booklet, type BookletStory } from "@/components/booklet";
+import type { BookletStory } from "@/components/booklet";
+import { MemoirPreview } from "@/components/memoir-preview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ import {
   type MemoirSource,
   type MemoirTrim,
 } from "@/lib/memoir";
+import type { CoverStyle, StoryTemplate } from "@/lib/memoir/design";
 import type { PrintCoverCode, PrintPaperCode } from "@/lib/print/catalog";
 
 type Chapter = { id: string; title: string; storyIds: string[] };
@@ -27,13 +29,11 @@ const selectClass = "h-12 w-full rounded-xl border border-[#e0d3bf] bg-[#fffaf3]
 export function MemoirEditor({
   dict,
   author,
-  compiled,
   stories,
   initial,
 }: {
   dict: Dictionary;
   author: string;
-  compiled: string;
   stories: BookletStory[];
   initial: {
     title: string;
@@ -45,6 +45,8 @@ export function MemoirEditor({
     trim: MemoirTrim;
     cover: PrintCoverCode;
     paper: PrintPaperCode;
+    coverStyle: CoverStyle;
+    storyTemplate: StoryTemplate;
     chapters: Chapter[];
     excluded: string[];
   };
@@ -58,6 +60,8 @@ export function MemoirEditor({
   const [trim, setTrim] = useState<MemoirTrim>(initial.trim);
   const [cover, setCover] = useState<PrintCoverCode>(initial.cover);
   const [paper, setPaper] = useState<PrintPaperCode>(initial.paper);
+  const [coverStyle, setCoverStyle] = useState<CoverStyle>(initial.coverStyle);
+  const [storyTemplate, setStoryTemplate] = useState<StoryTemplate>(initial.storyTemplate);
   const [chapters, setChapters] = useState<Chapter[]>(initial.chapters);
   const [excluded, setExcluded] = useState<string[]>(initial.excluded);
   const [note, setNote] = useState("");
@@ -81,7 +85,7 @@ export function MemoirEditor({
   const displayAuthor = authorName.trim() || author;
 
   function payload() {
-    return { title, subtitle, authorName, grouping, dedication, preface, trim, cover, paper, chapters, excluded };
+    return { title, subtitle, authorName, grouping, dedication, preface, trim, cover, paper, coverStyle, storyTemplate, chapters, excluded };
   }
 
   async function save() {
@@ -102,6 +106,8 @@ export function MemoirEditor({
     setExcluded(saved.excluded);
     setCover(saved.cover);
     setPaper(saved.paper);
+    setCoverStyle(saved.coverStyle);
+    setStoryTemplate(saved.storyTemplate);
     setTrim(saved.trim);
     setNote(dict.booklet.saved);
     return true;
@@ -233,6 +239,16 @@ export function MemoirEditor({
             ["ivory", dict.booklet.paperIvory],
             ["coated", dict.booklet.paperCoated],
           ]} />
+          <Choice id="memoir-style" label={dict.booklet.styleLabel} value={coverStyle} onChange={(value) => setCoverStyle(value as CoverStyle)} options={[
+            ["seal", dict.booklet.styleSeal],
+            ["cloth", dict.booklet.styleCloth],
+            ["lane", dict.booklet.styleLane],
+          ]} />
+          <Choice id="memoir-template" label={dict.booklet.templateLabel} value={storyTemplate} onChange={(value) => setStoryTemplate(value as StoryTemplate)} options={[
+            ["classic", dict.booklet.templateClassic],
+            ["photo", dict.booklet.templatePhoto],
+            ["spread", dict.booklet.templateSpread],
+          ]} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="memoir-dedication">{dict.booklet.dedication}</Label>
@@ -334,13 +350,18 @@ export function MemoirEditor({
         <p className="text-base leading-relaxed text-[#4d4032]">{dict.booklet.exportsNote}</p>
       </form>
       <div className="book-preview mt-8">
-        <h2 className="no-print mb-4 px-2 text-2xl">{dict.booklet.preview}</h2>
-        <Booklet
+        <MemoirPreview
           dict={dict}
-          author={author}
-          compiled={compiled}
+          author={displayAuthor}
           stories={stories}
-          edition={{ title, subtitle, author: displayAuthor, dedication, preface, chapters }}
+          title={title}
+          subtitle={subtitle}
+          dedication={dedication}
+          preface={preface}
+          chapters={chapters}
+          coverStyle={coverStyle}
+          binding={cover}
+          template={storyTemplate}
         />
       </div>
     </div>

@@ -83,6 +83,7 @@ const book = {
   trim: "a5" as const,
   cover: "hardcover" as const,
   paper: "uncoated" as const,
+  coverStyle: "seal" as const,
   chapters: [
     {
       title: "Childhood 童年",
