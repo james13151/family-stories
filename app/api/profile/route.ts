@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { clampDays, isFrequency } from "@/lib/frequency";
+import { clampDays, clampPrompts, isFrequency, isPromptDue, quotaFor } from "@/lib/frequency";
 import { isLocale } from "@/lib/locale";
 import { FAMILY_ROLES, OPEN_TOPIC_IDS, SKIP_TOPIC_IDS } from "@/lib/profile";
 
@@ -19,6 +19,7 @@ const schema = z.object({
   skipTopics: z.array(z.string()).optional(),
   frequency: z.string().optional(),
   customIntervalDays: z.number().optional(),
+  promptsPerDay: z.number().optional(),
   onboarded: z.boolean().optional(),
 });
 
@@ -33,6 +34,17 @@ export async function PUT(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: "invalid" }, { status: 400 });
   const data = parsed.data;
   const becomingReady = data.onboarded === true && !user.onboarded;
+  const nextFrequency = data.frequency && isFrequency(data.frequency) ? data.frequency : user.frequency;
+  const nextPerDay = data.promptsPerDay !== undefined ? clampPrompts(data.promptsPerDay) : user.promptsPerDay;
+  const paceChanged = nextFrequency !== user.frequency || nextPerDay !== user.promptsPerDay;
+  const quota = quotaFor(nextFrequency, nextPerDay);
+  const windowPatch = becomingReady
+    ? { nextPromptAt: new Date(), promptsLeft: quota }
+    : paceChanged
+      ? isPromptDue(user.nextPromptAt)
+        ? { promptsLeft: quota }
+        : { promptsLeft: 0 }
+      : {};
   const updated = await prisma.user.update({
     where: { id: user.id },
     data: {
@@ -48,8 +60,9 @@ export async function PUT(request: Request) {
       skipTopics: data.skipTopics ? JSON.stringify(keep(data.skipTopics, SKIP_TOPIC_IDS)) : undefined,
       frequency: data.frequency && isFrequency(data.frequency) ? data.frequency : undefined,
       customIntervalDays: data.customIntervalDays !== undefined ? clampDays(data.customIntervalDays) : undefined,
+      promptsPerDay: data.promptsPerDay !== undefined ? clampPrompts(data.promptsPerDay) : undefined,
       onboarded: data.onboarded ?? undefined,
-      nextPromptAt: becomingReady ? new Date() : undefined,
+      ...windowPatch,
     },
   });
   return NextResponse.json({ ok: true, onboarded: updated.onboarded });

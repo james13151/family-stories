@@ -12,7 +12,7 @@ let multiCategory = 0;
 let selfDevelopment = 0;
 let withPlace = 0;
 
-if (QUESTIONS.length < 100) errors.push(`question bank has ${QUESTIONS.length}, need at least 100`);
+if (QUESTIONS.length < 290) errors.push(`question bank has ${QUESTIONS.length}, need about 300`);
 
 for (const question of QUESTIONS) {
   if (ids.has(question.id)) errors.push(`duplicate id ${question.id}`);
@@ -73,7 +73,7 @@ if (countTheme("children") < 8) errors.push("children category is thin");
 if (countTheme("family") < 8) errors.push("family category is thin");
 if (withPlace < 20) errors.push(`only ${withPlace} questions have a place`);
 
-if (CHILD_QUESTIONS.length < 18) errors.push(`child bank has ${CHILD_QUESTIONS.length}`);
+if (CHILD_QUESTIONS.length < 40) errors.push(`child bank has ${CHILD_QUESTIONS.length}, need at least 40`);
 const childIds = new Set<string>();
 const childStages = new Set<string>();
 const childPlaces = new Set<string>();
@@ -116,4 +116,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Question bank OK: ${QUESTIONS.length} questions in English, Simplified Chinese, and Traditional Chinese.`);
+console.log(`Question bank OK: ${QUESTIONS.length} life questions and ${CHILD_QUESTIONS.length} child questions, in English, Simplified Chinese, and Traditional Chinese.`);

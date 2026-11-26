@@ -10,7 +10,7 @@
     "setup": "prisma generate && prisma db push && tsx scripts/seed.ts",
     "seed": "tsx scripts/seed.ts",
     "seed:reset": "tsx scripts/seed.ts --reset",
-    "check": "tsx scripts/check-content.ts",
+    "check": "tsx scripts/check-content.ts && tsx scripts/check-frequency.ts",
     "gift-card:sample": "tsx scripts/gift-card-sample.ts",
     "android:url": "tsx scripts/print-capacitor-url.ts",
     "android:sync": "cap sync android",
@@ -20,6 +20,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1177.0",
     "@base-ui/react": "^1.9.0",
+    "@capacitor/local-notifications": "^8.3.1",
     "@fontsource/noto-sans-sc": "^5.3.1",
     "@fontsource/noto-sans-tc": "^5.3.1",
     "@fontsource/noto-serif-sc": "^5.3.1",

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { OpenFromNotification } from "@/components/open-from-notification";
 import { SignOutButton } from "@/components/sign-out-button";
 import { Lantern, Wordmark } from "@/components/wordmark";
 import type { Dictionary } from "@/lib/i18n/types";
@@ -29,6 +30,7 @@ export function AppShell({
 
   return (
     <div className="min-h-screen">
+      <OpenFromNotification />
       <header className="no-print sticky top-0 z-30 border-b border-[#e0d3bf]/80 bg-[#f3ecdf]/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-3 px-4 py-3">
           <Link href={showNav ? "/home" : "/onboarding"} className="flex items-center gap-2 text-[#8d3b2e]">

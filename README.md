@@ -13,7 +13,7 @@ The product owner is in Hong Kong. People using it may be in Hong Kong, mainland
 - Keep a memory for a child. Answer a prompt about their life — first steps, a birthday, school, a family outing — or start a blank page. Those memories can be browsed by theme, by the child's years, and by place, in the same way as the life questions.
 - Print one story as its own booklet, or tick a few in the story log and print that small set. Each booklet has a title page, the words, and the photographs, so a single piece can be shared on its own.
 - Open the family memoir when the whole collection should read as one book: a title page, a table of contents, and chapters by time of life, by theme, or by person (your own stories, and a chapter for each child). Print either one from the browser, or save a PDF. No outside print service is used.
-- Set the invitation pace: weekly, twice a week, monthly, or every N days. They can write on any day.
+- Set the invitation pace: every day (and how many questions that day), weekly, twice a week, monthly, or every N days. A due question is shown on the home page. They can switch it for another suggestion. They can still write on any day. On the Android app, a local reminder can fire when the next invitation is due. The website itself can only remind someone while that page stays open.
 - Write in a book-like page. Change the font (book serif or clear sans), size, alignment, spacing, first-line indent, and a large first letter. Bold, italic, and underline are there for a phrase.
 - Record speech in the browser. The audio file is saved on the account. A pluggable transcriber turns it into text they can edit. The default transcriber is Whisper running on this server, not the Chrome / Google speech service. Traditional Chinese transcripts are converted with OpenCC toward Hong Kong usage after recognition.
 - Add photographs from the device. JPEG, PNG, WebP, and GIF. There is no Google Photos step.
@@ -56,7 +56,7 @@ The sign-in page can enter either account for you. Their stories are not visible
 | --- | --- |
 | `npm run dev` | Development server on port 43123 |
 | `npm run build` and `npm start` | Production build, same port |
-| `npm run check` | Confirms the question bank has 100+ items in all three languages |
+| `npm run check` | Confirms the life bank is about 300 questions, the child bank is at least 40, and every item exists in English, Simplified Chinese, and Traditional Chinese |
 | `npm run gift-card:sample` | Rewrites the sample cards in `docs/samples/` |
 | `npm run lint` | ESLint |
 | `npm run android:url` | Prints the site address that would be baked into the Android APK |
@@ -96,7 +96,7 @@ Passwords are hashed with bcrypt. The session cookie is `httpOnly` and `SameSite
 
 ### Questions and profile
 
-The bank is `lib/questions/bank.ts`: 135 questions, each written in English, Simplified Chinese, and Traditional Chinese. Traditional wording follows written Chinese used in Hong Kong where the everyday word differs (薪金, 街市, 電郵, 農曆新年, 爺爺嫲嫲 / 公公婆婆), not a mechanical character swap of the Simplified line.
+The life bank is `lib/questions/bank.ts`: about 300 questions, each written in English, Simplified Chinese, and Traditional Chinese. The smaller bank for memories of a child lives in `lib/questions/child-bank.ts`. Traditional wording follows written Chinese used in Hong Kong where the everyday word differs (薪金, 街市, 電郵, 農曆新年, 利是, 單車, 爺爺嫲嫲 / 公公婆婆), not a mechanical character swap of the Simplified line.
 
 On the question page the bank can be browsed three ways, in all three languages. By theme, questions are grouped and can sit in more than one category: childhood, family, school, career (the old “work” label), self-development, marriage, children, food, traditions, migration, later life, and the rest of the themes. By time, each question has a life stage and the groups run from family beginnings through childhood, school, coming of age, career, marriage, and children, then later life, with a last group for memories that run across a life. By place, only the questions about a place are shown, gathered as hometown, home, a city or region, moving, or travel. Nothing in that grouping is a private address. Suggested questions still sit above the groups.
 

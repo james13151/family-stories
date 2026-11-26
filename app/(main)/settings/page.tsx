@@ -24,6 +24,7 @@ export default async function SettingsPage() {
             ...profile,
             frequency: user.frequency,
             customIntervalDays: user.customIntervalDays,
+            promptsPerDay: user.promptsPerDay,
           }}
         />
       </div>

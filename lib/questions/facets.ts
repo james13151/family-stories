@@ -1,3 +1,4 @@
+import { ADDED_FACETS } from "@/lib/questions/bank-more";
 import type { LifeStage, Location, Question, Theme } from "@/lib/questions/types";
 
 export type Facet = {
@@ -176,6 +177,7 @@ export const FACETS: Record<string, Facet> = {
   "wa-kept": facet("across-life"),
   "ro-keep": facet("marriage", undefined, ["family"]),
   "ro-unsaid": facet("marriage"),
+  ...ADDED_FACETS,
 };
 
 export function questionCategories(question: Question): Theme[] {
